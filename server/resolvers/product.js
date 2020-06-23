@@ -1,18 +1,21 @@
-const { default: client } = require("axios")
+const { client, requestTypes } = require("../../client")
 
-module.exports = async (_, args) => {
+/**
+ * Retrieves a product by id
+ * @param {*} asin - amazon product id
+ */
+const getProduct = async (_, { asin }) => {
   const params = {
-    api_key: process.env.RF_API_KEY,
-    amazon_domain: "amazon.com",
-    type: "product",
-    asin: args.asin
+    type: requestTypes.PRODUCT,
+    asin
   }
 
   try {
-    const uri = "https://api.rainforestapi.com/request"
-    const { data: { product } } = await client.get(uri, { params })
+    const { data: { product } } = await client.get("/", { params })
     return product
   } catch (e) {
     return e
   }
 }
+
+module.exports = getProduct

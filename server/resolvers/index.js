@@ -1,7 +1,6 @@
-const product = require("./product")
-
 module.exports = {
   Query: {
-    Product: product
+    Product: require("./product"),
+    Products: require("./search"),
   }
 }
