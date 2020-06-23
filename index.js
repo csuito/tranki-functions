@@ -1,24 +1,18 @@
-const app = require("express")()
-const { ApolloServer, gql } = require("apollo-server-express")
+require("dotenv").config()
 
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`
-const resolvers = {
-  Query: {
-    hello: () => 'Hello World!'
-  }
-}
+const app = require("express")()
+
+const { ApolloServer } = require("apollo-server-express")
+const typeDefs = require("./server/typedefs")
+const resolvers = require("./server/resolvers")
 
 const server = new ApolloServer({ typeDefs, resolvers })
 
 server.applyMiddleware({
   app,
-  path: '/',
+  path: "/",
   cors: {
-    origin: '*',
+    origin: "*",
     credentials: false
   },
   playground: true
@@ -29,4 +23,4 @@ app.listen(8080, () => {
 })
 
 // gcloud export
-//exports.api = server
+// exports.api = server
