@@ -6,6 +6,7 @@ module.exports = gql`
     title: String!
     brand: String
     weight: String
+    shipping_weight: String
     dimensions: String
     link: String
     description: String
@@ -15,6 +16,8 @@ module.exports = gql`
     images: [Media]
     categories: [Category]
     attributes: [Attribute]
+    specifications: [Attribute]
+    first_available: Availability
     frequently_bought_together: [Product]
   }
 
@@ -38,6 +41,11 @@ module.exports = gql`
     link: String
   }
 
+  type Availability {
+    raw: String
+    utc: String
+  }
+
   type Pagination {
     total_pages: Int!
     current_page: Int!
@@ -48,8 +56,19 @@ module.exports = gql`
     pagination: Pagination
   }
 
+  type StockEstimation {
+    asin: ID!
+    stock_level: Int!
+    price: Price
+    is_prime: Boolean
+    in_stock: Boolean!
+    message: String
+    min_quantity: Int
+  }
+
   type Query {
     Product(asin: ID!): Product
     Search(search_term: String!) : Results
+    Stock(asin: ID!): StockEstimation
   }
 `

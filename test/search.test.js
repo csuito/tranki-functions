@@ -6,17 +6,7 @@ const { expect } = require("chai")
 const typeDefs = require("../server/typedefs")
 const resolvers = require("../server/resolvers")
 
-describe("Test graphql queries", () => {
-  const productQuery = gql`
-    query getProduct($asin: ID!) {
-      Product(asin: $asin) {
-        asin
-        title
-        brand
-      }
-    }
-  `
-
+describe("test graphql SEARCH queries", () => {
   const searchQuery = gql`
     query search($search_term: String!) {
       Search(search_term: $search_term) {
@@ -40,49 +30,12 @@ describe("Test graphql queries", () => {
   }
 
   const testVariables = {
-    product: {
-      asin: testProduct.asin
-    },
-    search: {
-      search_term: "iphone X"
-    }
+    search_term: "Samsung MicroSD card"
   }
 
   let tester
   before(() => {
     tester = new GraphQLTester(typeDefs, resolvers)
-  })
-
-  it("fails on invalid product query", async () => {
-    const invalidQuery = gql`
-    query getProduct($asin: ID!) {
-      Product(asin: $asin) {
-        asin
-        title
-        invalid_field
-      }
-    }
-  `
-    tester.test(false, { query: invalidQuery, variables: testVariables.product })
-  })
-
-  it("should pass on valid product query", () => {
-    tester.test(true, { query: productQuery, variables: testVariables.product })
-  })
-
-  it("should return mocked fields on product query", () => {
-    const fixture = {
-      data: {
-        Product: {
-          ...testProduct
-        }
-      }
-    }
-
-    const { data: { Product } } = tester.mock({ query: productQuery, fixture, variables: testVariables.product })
-    expect(Product.asin).to.be.a("string").to.equal(testProduct.asin)
-    expect(Product.title).to.be.a("string").to.equal(testProduct.title)
-    expect(Product.brand).to.be.a("string").to.equal(testProduct.brand)
   })
 
   it("should fail on invalid search query", () => {
@@ -101,11 +54,11 @@ describe("Test graphql queries", () => {
       }
     }
   `
-    tester.test(false, { query: invalidQuery, variables: testVariables.search })
+    tester.test(false, { query: invalidQuery, variables: testVariables })
   })
 
   it("should pass on valid search query", () => {
-    tester.test(true, { query: searchQuery, variables: testVariables.search })
+    tester.test(true, { query: searchQuery, variables: testVariables })
   })
 
   it("should return mocked fields on search query", () => {
@@ -121,7 +74,7 @@ describe("Test graphql queries", () => {
       }
     }
 
-    const { data: { Search: { search_results: [result], pagination } } } = tester.mock({ query: searchQuery, fixture, variables: testVariables.search })
+    const { data: { Search: { search_results: [result], pagination } } } = tester.mock({ query: searchQuery, fixture, variables: testVariables })
     expect(result.asin).to.be.a("string").to.equal(testProduct.asin)
     expect(result.title).to.be.a("string").to.equal(testProduct.title)
     expect(result.brand).to.be.a("string").to.equal(testProduct.brand)
