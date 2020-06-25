@@ -23,6 +23,7 @@ class Client {
       config.params["api_key"] = process.env.RF_API_KEY
       config.params["output"] = "json"
       config.params["include_html"] = false
+      config.params["offers_prime"] = true
       return config
     })
   }
