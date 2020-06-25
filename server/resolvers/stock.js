@@ -1,4 +1,5 @@
-const { client, requestTypes } = require("../../client")
+const { client } = require("../../client")
+const { requestTypes } = require("../constants")
 
 /**
  * Retrieves a single product's stock estimation

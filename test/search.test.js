@@ -78,6 +78,7 @@ describe("test graphql SEARCH queries", () => {
     expect(result.asin).to.be.a("string").to.equal(testProduct.asin)
     expect(result.title).to.be.a("string").to.equal(testProduct.title)
     expect(result.brand).to.be.a("string").to.equal(testProduct.brand)
+
     expect(pagination.total_pages).to.be.a("number").to.equal(20)
     expect(pagination.current_page).to.be.a("number").to.equal(1)
   })

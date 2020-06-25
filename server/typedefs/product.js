@@ -4,21 +4,32 @@ module.exports = gql`
   type Product {
     asin: ID!
     title: String!
+    sub_title: SubTitle
     brand: String
     weight: String
     shipping_weight: String
     dimensions: String
     link: String
+    main_image: Media
     description: String
     price: Price
-    main_image: Media
+    rating: Float
+    ratings_total: Int
+    reviews_total: Int
+    feature_bullets: [String]
     image: String
     images: [Media]
     categories: [Category]
     attributes: [Attribute]
     specifications: [Attribute]
-    first_available: Availability
+    first_available: Date
+    bestsellers_rank: [BestsellersRank]
     frequently_bought_together: [Product]
+  }
+
+  type SubTitle {
+    title: String
+    link: String
   }
 
   type Price {
@@ -41,8 +52,14 @@ module.exports = gql`
     link: String
   }
 
-  type Availability {
+  type Date {
     raw: String
     utc: String
+  }
+
+  type BestsellersRank {
+    category: String
+    rank: Int
+    link: String
   }
 `

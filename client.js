@@ -13,7 +13,6 @@ class Client {
       },
     })
     this.setDefaultParams()
-    this.setRequestTypes()
   }
 
   setDefaultParams() {
@@ -26,18 +25,6 @@ class Client {
       config.params["offers_prime"] = true
       return config
     })
-  }
-
-  setRequestTypes() {
-    this.requestTypes = {
-      PRODUCT: "product",
-      SEARCH: "search",
-      STOCK_ESTIMATION: "stock_estimation",
-      REVIEWS: "reviews",
-      OFFERS: "offers",
-      BESTSELLERS: "bestsellers",
-      CATEGORY: "category"
-    }
   }
 }
 
