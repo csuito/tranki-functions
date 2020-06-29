@@ -3,7 +3,7 @@ const { gql } = require("apollo-server-express")
 module.exports = gql`
   type Product {
     asin: ID!
-    title: String!
+    title: String
     sub_title: SubTitle
     brand: String
     weight: String
