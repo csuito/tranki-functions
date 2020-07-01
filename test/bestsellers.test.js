@@ -8,8 +8,8 @@ const resolvers = require("../server/resolvers")
 
 describe("test graphql BESTSELLERS queries", () => {
   const bestsellersQuery = gql`
-    query getBestsellers($url: String!, $page: Int, $total_pages: Int) {
-      bestsellers(url: $url, page: $page, total_pages: $total_pages) {
+    query getBestsellers($url: String!, $page: Int) {
+      bestsellers(url: $url, page: $page) {
         bestsellers {
           rank
           position

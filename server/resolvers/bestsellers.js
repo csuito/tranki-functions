@@ -2,7 +2,7 @@
  * Returns a list of products based on a search_term
  * @param {*} args
  */
-const getBestsellers = async (_, { url, page = 1, total_pages }) => {
+const getBestsellers = async (_, { url, page = 1 }) => {
   const { client } = require("../../client")
   const { requestTypes } = require("../constants")
 
@@ -10,7 +10,6 @@ const getBestsellers = async (_, { url, page = 1, total_pages }) => {
     type: requestTypes.BESTSELLERS,
     url,
     page,
-    total_pages,
   }
 
   try {
