@@ -4,6 +4,7 @@ module.exports = {
     SEARCH: "search",
     STOCK_ESTIMATION: "stock_estimation",
     REVIEWS: "reviews",
+    BESTSELLERS: "bestsellers",
   },
 
   sortOptions: {

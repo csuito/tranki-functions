@@ -28,7 +28,7 @@ module.exports = gql`
   }
 
   type SubTitle {
-    title: String
+    text: String
     link: String
   }
 

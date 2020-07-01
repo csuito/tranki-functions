@@ -37,6 +37,12 @@ module.exports = gql`
     comments: Int
   }
 
+  extend type Pagination {
+    start: Int
+    end: Int
+    reviews_total: Int
+  }
+
   type ReviewsResult {
     product: Product
     summary: Summary

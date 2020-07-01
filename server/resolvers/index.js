@@ -4,5 +4,6 @@ module.exports = {
     search: require("./search"),
     stock: require("./stock"),
     reviews: require("./reviews"),
+    bestsellers: require("./bestsellers"),
   }
 }
