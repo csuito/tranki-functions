@@ -12,7 +12,7 @@ const queries = gql`
     search(search_term: String!, sort_by: String, page: Int) : Results
     stock(asin: ID!) : StockEstimation
     reviews(asin: ID!, sort_by: String, reviewer_type: String, review_stars: String, page: Int) : ReviewsResult
-    bestsellers(page: Int, total_pages: Int) : Bestsellers
+    bestsellers(url: String!, page: Int, total_pages: Int) : Bestsellers
   }
 `
 
