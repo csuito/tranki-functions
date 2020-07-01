@@ -9,7 +9,7 @@ const resolvers = require("../server/resolvers")
 describe("test graphql STOCK_ESTIMATION queries", () => {
   const stockQuery = gql`
     query getStock($asin: ID!) {
-      Stock(asin: $asin) {
+      stock(asin: $asin) {
         asin
         stock_level
         min_quantity
@@ -49,7 +49,7 @@ describe("test graphql STOCK_ESTIMATION queries", () => {
   it("should fail on invalid stock_estimation query", async () => {
     const invalidQuery = gql`
     query getStock($asin: ID!) {
-      Stock(asin: $asin) {
+      stock(asin: $asin) {
         asin
         stock_level
         min_quantity
@@ -74,20 +74,20 @@ describe("test graphql STOCK_ESTIMATION queries", () => {
   it("should return mocked fields on stock_estimation query", () => {
     const fixture = {
       data: {
-        Stock: {
+        stock: {
           ...testProduct
         }
       }
     }
 
-    const { data: { Stock } } = tester.mock({ query: stockQuery, fixture, variables: testVariables })
-    expect(Stock.asin).to.be.a("string").to.equal(testProduct.asin)
-    expect(Stock.stock_level).to.be.a("number").to.equal(testProduct.stock_level)
-    expect(Stock.min_quantity).to.be.a("number").to.equal(testProduct.min_quantity)
-    expect(Stock.is_prime).to.be.a("boolean").to.equal(testProduct.is_prime)
-    expect(Stock.in_stock).to.be.a("boolean").to.equal(testProduct.in_stock)
-    expect(Stock.price.raw).to.be.a("string").to.equal(testProduct.price.raw)
-    expect(Stock.price.value).to.be.a("number").to.equal(testProduct.price.value)
-    expect(Stock.price.currency).to.be.a("string").to.equal(testProduct.price.currency)
+    const { data: { stock } } = tester.mock({ query: stockQuery, fixture, variables: testVariables })
+    expect(stock.asin).to.be.a("string").to.equal(testProduct.asin)
+    expect(stock.stock_level).to.be.a("number").to.equal(testProduct.stock_level)
+    expect(stock.min_quantity).to.be.a("number").to.equal(testProduct.min_quantity)
+    expect(stock.is_prime).to.be.a("boolean").to.equal(testProduct.is_prime)
+    expect(stock.in_stock).to.be.a("boolean").to.equal(testProduct.in_stock)
+    expect(stock.price.raw).to.be.a("string").to.equal(testProduct.price.raw)
+    expect(stock.price.value).to.be.a("number").to.equal(testProduct.price.value)
+    expect(stock.price.currency).to.be.a("string").to.equal(testProduct.price.currency)
   })
 })

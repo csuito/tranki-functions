@@ -9,7 +9,7 @@ const resolvers = require("../server/resolvers")
 describe("test graphql REVIEWS queries", () => {
   const reviewsQuery = gql`
     query getReviews($asin: ID!) {
-      Reviews(asin: $asin) {
+      reviews(asin: $asin) {
         product {
           asin
           title
@@ -69,7 +69,7 @@ describe("test graphql REVIEWS queries", () => {
   it("should fail on invalid search query", () => {
     const invalidQuery = gql`
     query getReviews($asin: ID!) {
-      Reviews(asin: $asin) {
+      reviews(asin: $asin) {
         product {
           asin
           title
@@ -93,7 +93,7 @@ describe("test graphql REVIEWS queries", () => {
   it("should return mocked fields on search query", () => {
     const fixture = {
       data: {
-        Reviews: {
+        reviews: {
           product: {
             ...testProduct
           },
@@ -113,7 +113,7 @@ describe("test graphql REVIEWS queries", () => {
       }
     }
 
-    const { data: { Reviews: { product, top_positive, top_critical, pagination } } } = tester.mock({ query: reviewsQuery, fixture, variables: testVariables })
+    const { data: { reviews: { product, top_positive, top_critical, pagination } } } = tester.mock({ query: reviewsQuery, fixture, variables: testVariables })
     expect(product.asin).to.be.a("string").to.equal(testProduct.asin)
     expect(product.title).to.be.a("string").to.equal(testProduct.title)
 

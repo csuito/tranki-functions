@@ -9,7 +9,7 @@ const resolvers = require("../server/resolvers")
 describe("test graphql PRODUCT queries", () => {
   const productQuery = gql`
     query getProduct($asin: ID!) {
-      Product(asin: $asin) {
+      product(asin: $asin) {
         asin
         title
         brand
@@ -35,7 +35,7 @@ describe("test graphql PRODUCT queries", () => {
   it("should fail on invalid product query", async () => {
     const invalidQuery = gql`
     query getProduct($asin: ID!) {
-      Product(asin: $asin) {
+      product(asin: $asin) {
         asin
         title
         invalid_field
@@ -52,15 +52,15 @@ describe("test graphql PRODUCT queries", () => {
   it("should return mocked fields on product query", () => {
     const fixture = {
       data: {
-        Product: {
+        product: {
           ...testProduct
         }
       }
     }
 
-    const { data: { Product } } = tester.mock({ query: productQuery, fixture, variables: testVariables })
-    expect(Product.asin).to.be.a("string").to.equal(testProduct.asin)
-    expect(Product.title).to.be.a("string").to.equal(testProduct.title)
-    expect(Product.brand).to.be.a("string").to.equal(testProduct.brand)
+    const { data: { product } } = tester.mock({ query: productQuery, fixture, variables: testVariables })
+    expect(product.asin).to.be.a("string").to.equal(testProduct.asin)
+    expect(product.title).to.be.a("string").to.equal(testProduct.title)
+    expect(product.brand).to.be.a("string").to.equal(testProduct.brand)
   })
 })

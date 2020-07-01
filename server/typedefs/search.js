@@ -9,6 +9,14 @@ module.exports = gql`
     reviews_total: Int
   }
 
+  extend type Product {
+    prices: [Price]
+  }
+
+  extend type Price {
+    name: String
+  }
+
   type Results {
     search_results: [Product]
     pagination: Pagination

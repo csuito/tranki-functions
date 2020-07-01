@@ -1,8 +1,8 @@
 module.exports = {
   Query: {
-    Product: require("./product"),
-    Search: require("./search"),
-    Stock: require("./stock"),
-    Reviews: require("./reviews")
+    product: require("./product"),
+    search: require("./search"),
+    stock: require("./stock"),
+    reviews: require("./reviews"),
   }
 }
