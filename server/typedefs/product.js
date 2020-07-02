@@ -20,10 +20,14 @@ module.exports = gql`
     image: String
     images: [Media]
     categories: [Category]
+    variants: [Variant]
     attributes: [Attribute]
     specifications: [Attribute]
     first_available: Date
     bestsellers_rank: [BestsellersRank]
+    also_viewed: [ProductShort]
+    also_bought: [ProductShort]
+    sponsored_products: [ProductShort]
     frequently_bought_together: [Product]
   }
 
@@ -41,6 +45,24 @@ module.exports = gql`
 
   type Category {
     name: String
+  }
+
+  type ProductShort implements Variant {
+    title: String
+    asin: ID
+    link: String
+    price: Price
+    image: String
+    is_prime: Boolean
+    rating: Float
+    ratings_total: Int
+  }
+
+  interface Variant {
+    title: String
+    asin: ID
+    link: String
+    price: Price
   }
 
   type Attribute {

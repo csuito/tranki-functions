@@ -2,11 +2,17 @@ exports.api = (() => {
   const app = require("express")()
   const { https: { onRequest } } = require("firebase-functions")
 
-  const { ApolloServer } = require("apollo-server-express")
+  const { ApolloServer, makeExecutableSchema } = require("apollo-server-express")
   const typeDefs = require("./server/typedefs")
   const resolvers = require("./server/resolvers")
 
-  const server = new ApolloServer({ typeDefs, resolvers, introspection: true, playground: true })
+  const schema = makeExecutableSchema({
+    typeDefs,
+    resolvers,
+    resolverValidationOptions: { requireResolversForResolveType: false },
+  })
+
+  const server = new ApolloServer({ schema, introspection: true, playground: true })
 
   server.applyMiddleware({
     app,
