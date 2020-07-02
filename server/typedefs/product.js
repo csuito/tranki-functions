@@ -47,7 +47,14 @@ module.exports = gql`
     name: String
   }
 
-  type ProductShort implements Variant {
+  type Variant {
+    title: String
+    asin: ID
+    link: String
+    price: Price
+  }
+
+  type ProductShort {
     title: String
     asin: ID
     link: String
@@ -56,13 +63,6 @@ module.exports = gql`
     is_prime: Boolean
     rating: Float
     ratings_total: Int
-  }
-
-  interface Variant {
-    title: String
-    asin: ID
-    link: String
-    price: Price
   }
 
   type Attribute {
