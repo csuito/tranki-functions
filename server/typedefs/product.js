@@ -13,6 +13,7 @@ module.exports = gql`
     main_image: Media
     description: String
     price: Price
+    buybox_winner: BuyBoxWinner
     rating: Float
     ratings_total: Int
     reviews_total: Int
@@ -25,6 +26,7 @@ module.exports = gql`
     specifications: [Attribute]
     first_available: Date
     bestsellers_rank: [BestsellersRank]
+    more_buying_choices: [BuyingChoice]
     also_viewed: [ProductShort]
     also_bought: [ProductShort]
     sponsored_products: [ProductShort]
@@ -52,6 +54,44 @@ module.exports = gql`
     asin: ID
     link: String
     price: Price
+  }
+
+  type BuyBoxWinner {
+    is_prime: Boolean
+    condition: Condition
+    availability: Availability
+    fulfillment: Fulfillment
+    price: Price
+    rrp: Price
+    shipping: Price
+    save: Price
+    unqualified_buy_box: Boolean
+  }
+
+  type Condition {
+    is_new: Boolean
+  }
+
+  type Availability {
+    type: String
+    raw: String
+    dispatch_days: Int
+  }
+
+  type Fulfillment {
+    type: String
+    is_sold_by_amazon: Boolean
+    is_fulfilled_by_amazon:  Boolean
+    is_sold_by_third_party: Boolean
+    is_fulfilled_by_third_party: Boolean
+  }
+
+  type BuyingChoice {
+    price: Price
+    seller_name: String
+    seller_link: String
+    free_shipping: Boolean
+    position: Int
   }
 
   type ProductShort {

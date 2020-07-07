@@ -13,7 +13,7 @@
 .git
 .gitignore
 .env
-.env.yaml
+*.env.yaml
 
 node_modules
 test

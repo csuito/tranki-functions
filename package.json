@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "test": "mocha test --exit",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs10 --env-vars-file $npm_config_func.env.yaml --trigger-http"
   },
   "keywords": [],
   "author": "",
@@ -16,11 +17,13 @@
     "npm": "6.14.5"
   },
   "dependencies": {
+    "algoliasearch": "^4.3.0",
     "apollo-server-express": "^2.15.0",
     "axios": "^0.19.2",
     "express": "^4.17.1",
     "firebase-admin": "^8.12.1",
-    "firebase-functions": "^3.7.0"
+    "firebase-functions": "^3.7.0",
+    "mongoose": "^5.9.22"
   },
   "devDependencies": {
     "chai": "^4.2.0",
