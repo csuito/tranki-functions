@@ -37,7 +37,7 @@ module.exports = (req, res) => {
       console.log("saved products to DB")
 
       const index = algoliaClient.initIndex("products")
-      await index.saveObjects(products, { autoGenerateObjectIDIfNotExist: true })
+      await index.replaceAllObjects(products, { autoGenerateObjectIDIfNotExist: true })
       console.log("saved products to Algolia")
 
       return res.status(200)
