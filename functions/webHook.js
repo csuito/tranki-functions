@@ -12,9 +12,9 @@ module.exports = (req, res) => {
 
     try {
       const results = await Promise.all(downloadLinks)
-      console.log("retrieved products; ready for preprocessing")
+      console.log(`[${new Date().toLocaleString()}]: retrieved products ready for preprocessing`)
 
-      const products = results.
+      let products = results.
         map(({ data: [page] }) => {
           switch (page.request.type) {
             case "category":
@@ -31,19 +31,39 @@ module.exports = (req, res) => {
           category,
           offer
         }))
-      console.log("results preprocessing done, ready to save to DB")
 
-      await Product.create(products)
-      console.log("saved products to DB")
+      console.log(`[${new Date().toLocaleString()}]: results preprocessing done, ready to save to DB`)
+
+      // check mongo 
+      // if there's no products (1st time): 
+      // - saveObjects to algolia first, then get back the objectIds and add it to items, create in mongo
+      // else:
+      // - retrieve mongo products by asin
+      // - split products array in 2 jobs: 1) existing products, 2) new products
+      // - for new products, do 1st time algo
+      // - for existing products, update products in mongo then add to algolia
 
       const index = algoliaClient.initIndex("products")
-      await index.replaceAllObjects(products, { autoGenerateObjectIDIfNotExist: true })
-      console.log("saved products to Algolia")
+      const { objectIDs } = await index.saveObjects(products, {
+        autoGenerateObjectIDIfNotExist: true
+      })
+      console.log(`[${new Date().toLocaleString()}]: saved products to Algolia`)
 
-      return res.status(200)
-    } catch (e) {
-      console.log("failed to complete job\n", { e })
-      return res.status(500)
+      const updates = products.map((product, i) => ({
+        updateOne: {
+          filter: { asin: product.asin },
+          update: { ...product, objectID: objectIDs[i] },
+          upsert: true
+        }
+      }))
+
+      Product.bulkWrite(updates)
+      console.log(`[${new Date().toLocaleString()}]: saved products to DB`)
+
+      return res.status(200).end()
+    } catch (error) {
+      console.log(`[${new Date().toLocaleString()}]: failed to complete job\n`, { error })
+      return res.status(500).end()
     }
   })
 }
