@@ -11,7 +11,14 @@ const schema = makeExecutableSchema({
   resolverValidationOptions: { requireResolversForResolveType: false },
 })
 
-const server = new ApolloServer({ schema, introspection: true, playground: true })
+const server = new ApolloServer({
+  schema,
+  introspection: true,
+  playground: true,
+  context: ({ req }) => ({
+    auth: req.headers.authorization || ""
+  })
+})
 
 server.applyMiddleware({
   app,

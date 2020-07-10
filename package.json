@@ -23,6 +23,7 @@
     "express": "^4.17.1",
     "firebase-admin": "^8.12.1",
     "firebase-functions": "^3.7.0",
+    "graphql-resolvers": "^0.4.2",
     "mongoose": "^5.9.22"
   },
   "devDependencies": {
