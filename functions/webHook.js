@@ -12,9 +12,9 @@ module.exports = (req, res) => {
 
     try {
       const results = await Promise.all(downloadLinks)
-      console.log(`[${new Date().toLocaleString()}]: retrieved products ready for preprocessing`)
+      console.log("Retrieved products - ready for preprocessing")
 
-      let products = results.
+      const products = results.
         map(({ data: [page] }) => {
           switch (page.request.type) {
             case "category":
@@ -32,38 +32,57 @@ module.exports = (req, res) => {
           offer
         }))
 
-      console.log(`[${new Date().toLocaleString()}]: results preprocessing done, ready to save to DB`)
-
-      // check mongo 
-      // if there's no products (1st time): 
-      // - saveObjects to algolia first, then get back the objectIds and add it to items, create in mongo
-      // else:
-      // - retrieve mongo products by asin
-      // - split products array in 2 jobs: 1) existing products, 2) new products
-      // - for new products, do 1st time algo
-      // - for existing products, update products in mongo then add to algolia
+      console.log("Results preprocessing done - ready to save to DB")
+      const productCodes = products.map(product => product.asin)
+      const existingProducts = await Product.find({ "asin": { $in: productCodes } }).lean()
+      const existingProductCodes = existingProducts.map(product => product.asin)
+      const newProducts = products.filter(({ asin }) => !existingProductCodes.includes(asin))
 
       const index = algoliaClient.initIndex("products")
-      const { objectIDs } = await index.saveObjects(products, {
-        autoGenerateObjectIDIfNotExist: true
-      })
-      console.log(`[${new Date().toLocaleString()}]: saved products to Algolia`)
 
-      const updates = products.map((product, i) => ({
+      console.log("Products breakdown:", { existingProducts: existingProducts.length, newProducts: newProducts.length, totalProducts: existingProducts.length + newProducts.length })
+
+      if (Array.isArray(existingProducts) && existingProducts.length >= 1) {
+        await index.saveObjects(existingProducts, {
+          autoGenerateObjectIDIfNotExist: true
+        })
+        console.log("Updated existing products in Algolia")
+      }
+
+      let objectIDs = []
+      if (Array.isArray(newProducts) && newProducts.length >= 1) {
+        const { objectIDs: ids } = await index.saveObjects(newProducts, {
+          autoGenerateObjectIDIfNotExist: true
+        })
+        objectIDs = [...ids]
+        console.log(`Saved ${objectIDs.length} new products in Algolia`)
+      }
+
+      console.log("Ready to define operations")
+
+      const updates = Array.isArray(existingProducts) && existingProducts.length >= 1 ? existingProducts.map(product => ({
         updateOne: {
           filter: { asin: product.asin },
-          update: { ...product, objectID: objectIDs[i] },
+          update: { ...product },
           upsert: true
         }
-      }))
+      })) : []
 
-      Product.bulkWrite(updates)
-      console.log(`[${new Date().toLocaleString()}]: saved products to DB`)
+      const inserts = Array.isArray(newProducts) && newProducts.length >= 1 ? newProducts.map((product, i) => ({
+        insertOne: {
+          document: { ...product, objectID: objectIDs[i] },
+        }
+      })) : []
 
-      return res.status(200).end()
+      console.log("Operations breakdown:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
+
+      await Product.bulkWrite([...updates, ...inserts])
+      console.log("Saved products in DB")
+
+      return res.sendStatus(200)
     } catch (error) {
-      console.log(`[${new Date().toLocaleString()}]: failed to complete job\n`, { error })
-      return res.status(500).end()
+      console.log("Failed to complete job\n", { error })
+      return res.sendStatus(500)
     }
   })
 }
