@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "env NODE_ENV=local functions-framework --target=$npm_config_func",
     "test": "mocha test --exit",
     "dev": "nodemon index.js",
     "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs10 --env-vars-file $npm_config_func.env.yaml --trigger-http"
@@ -27,7 +27,9 @@
     "mongoose": "^5.9.22"
   },
   "devDependencies": {
+    "@google-cloud/functions-framework": "^1.6.0",
     "chai": "^4.2.0",
+    "dotenv": "^8.2.0",
     "easygraphql-tester": "^5.1.6",
     "mocha": "^8.0.1"
   }

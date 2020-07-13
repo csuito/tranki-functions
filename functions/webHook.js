@@ -1,88 +1,71 @@
 module.exports = (req, res) => {
+  if (process.env.NODE_ENV === "local") {
+    require("dotenv").config()
+  }
+
   const db = require("./config/db")()
-  const Product = require("../server/model/products")
 
   db.once("open", async () => {
     const axios = require("axios")
     const algoliaClient = require("./config/algolia")()
-
-    const { bestseller, department, category, offer } = req.query
-    const { result_set: { download_links: { json: { pages } } } } = req.body
-    const downloadLinks = pages.map(page => axios.get(page))
+    const { getProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray } = require("./helpers/hookHelpers")
 
     try {
+      const { result_set: { download_links: { json: { pages } } } } = req.body
+      const downloadLinks = pages.map(page => axios.get(page))
+
       const results = await Promise.all(downloadLinks)
+
       console.log("Retrieved products - ready for preprocessing")
 
-      const products = results.
-        map(({ data: [page] }) => {
-          switch (page.request.type) {
-            case "category":
-              return page.result.category_results
-            case "bestsellers":
-              return page.result.bestsellers
-          }
-        }).
-        reduce((a, b) => a.concat(b), []).
-        map(item => ({
-          ...item,
-          bestseller,
-          department,
-          category,
-          offer
-        }))
+      const productCodes = getProductCodes(results)
 
-      console.log("Results preprocessing done - ready to save to DB")
-      const productCodes = products.map(product => product.asin)
-      const existingProducts = await Product.find({ "asin": { $in: productCodes } }).lean()
-      const existingProductCodes = existingProducts.map(product => product.asin)
-      const newProducts = products.filter(({ asin }) => !existingProductCodes.includes(asin))
+      console.log("Results preprocessing done - ready to get product details")
+
+      const products = await getProductDetails(productCodes, req.query)
+
+      console.log(`Products: ${products.length}`)
+
+      const { existingProducts, newProducts } = await splitProductsByOpType(productCodes, products)
 
       const index = algoliaClient.initIndex("products")
 
       console.log("Products breakdown:", { existingProducts: existingProducts.length, newProducts: newProducts.length, totalProducts: existingProducts.length + newProducts.length })
 
-      if (Array.isArray(existingProducts) && existingProducts.length >= 1) {
+      let updates = []
+      if (checkArray(existingProducts)) {
         await index.saveObjects(existingProducts, {
           autoGenerateObjectIDIfNotExist: true
         })
-        console.log("Updated existing products in Algolia")
+        console.log(`Updated ${existingProducts.length} products in Algolia`)
+
+        updates = buildUpdateOps(existingProducts)
       }
 
-      let objectIDs = []
-      if (Array.isArray(newProducts) && newProducts.length >= 1) {
-        const { objectIDs: ids } = await index.saveObjects(newProducts, {
+      let inserts = []
+      if (checkArray(newProducts)) {
+        const { objectIDs } = await index.saveObjects(newProducts, {
           autoGenerateObjectIDIfNotExist: true
         })
-        objectIDs = [...ids]
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
+
+        inserts = buildInsertOps(newProducts, objectIDs)
       }
 
-      console.log("Ready to define operations")
+      if (checkArray(updates) || checkArray(inserts)) {
+        const Product = require("../server/model/products")
 
-      const updates = Array.isArray(existingProducts) && existingProducts.length >= 1 ? existingProducts.map(product => ({
-        updateOne: {
-          filter: { asin: product.asin },
-          update: { ...product },
-          upsert: true
-        }
-      })) : []
+        console.log("Ready to execute DB operations:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
 
-      const inserts = Array.isArray(newProducts) && newProducts.length >= 1 ? newProducts.map((product, i) => ({
-        insertOne: {
-          document: { ...product, objectID: objectIDs[i] },
-        }
-      })) : []
+        await Product.bulkWrite([...updates, ...inserts])
 
-      console.log("Operations breakdown:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
+        console.log("Saved products in DB")
+      }
 
-      await Product.bulkWrite([...updates, ...inserts])
-      console.log("Saved products in DB")
-
-      return res.sendStatus(200)
-    } catch (error) {
-      console.log("Failed to complete job\n", { error })
-      return res.sendStatus(500)
+      return res.status(200).send()
+    } catch (err) {
+      console.log({ err })
+      return res.status(500).send()
     }
   })
 }

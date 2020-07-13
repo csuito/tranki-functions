@@ -7,7 +7,7 @@ class Client {
   constructor() {
     this.client = axios.create({
       baseURL: "https://api.rainforestapi.com/request",
-      timeout: 10000,
+      timeout: 35000,
       headers: {
         "Content-Type": "application/json"
       },

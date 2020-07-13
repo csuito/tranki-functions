@@ -8,19 +8,12 @@ const { isAuthenticated } = require("./middleware/auth")
 const getProduct = combineResolvers(
   isAuthenticated,
   async (_, { asin }) => {
-    const { client } = require("../../client")
-    const { requestTypes } = require("../constants")
-
-    const params = {
-      type: requestTypes.PRODUCT,
-      asin
-    }
+    const Product = require("../model/products")
 
     try {
-      const { data: { product } } = await client.get("/", { params })
-      return product
+      return await Product.findOne({ asin })
     } catch (e) {
-      return { success: false }
+      return { success: false, error: "Internal server error", message: "Unable to find product in DB" }
     }
   })
 
