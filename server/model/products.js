@@ -31,10 +31,6 @@ const category = new Schema({
   name: { type: String }
 }, { _id: false })
 
-const productId = new Schema({
-  asin: { type: String },
-}, { _id: false })
-
 const price = new Schema({
   symbol: { type: String },
   value: { type: Number },
@@ -43,9 +39,16 @@ const price = new Schema({
   name: { type: String }
 }, { _id: false })
 
+const shortProduct = new Schema({
+  asin: { type: String },
+  title: { type: String },
+  image: { type: String },
+  price
+}, { _id: false })
+
 const productSchema = new Schema({
   title: { type: String, required: true },
-  asin: { type: String, required: true },
+  asin: { type: String, required: true, unique: true },
   link: { type: String, required: true },
   is_prime: { type: Boolean },
   image: { type: String },
@@ -75,7 +78,7 @@ const productSchema = new Schema({
   attributes: [attribute],
   specifications: [attribute],
   categories: [category],
-  variants: [productId],
+  variants: [shortProduct],
   rating: { type: Number },
   ratings_total: { type: Number },
   reviews_total: { type: Number },
@@ -92,10 +95,10 @@ const productSchema = new Schema({
   },
   frequently_bought_together: {
     total_price: price,
-    products: [productId]
+    products: [shortProduct]
   },
-  also_viewed: [productId],
-  also_bought: [productId]
+  also_viewed: [shortProduct],
+  also_bought: [shortProduct]
 })
 
 module.exports = model("Product", productSchema)

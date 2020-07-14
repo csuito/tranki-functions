@@ -5,6 +5,7 @@ module.exports = {
     STOCK_ESTIMATION: "stock_estimation",
     REVIEWS: "reviews",
     BESTSELLERS: "bestsellers",
+    CATEGORY: "category"
   },
 
   sortOptions: {

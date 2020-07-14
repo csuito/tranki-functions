@@ -1,10 +1,14 @@
+const { requestTypes } = require("../../server/constants")
+
 const getProductCodes = results => results.
   map(({ data: [page] }) => {
     switch (page.request.type) {
-      case "category":
+      case requestTypes.CATEGORY:
         return page.result.category_results
-      case "bestsellers":
+      case requestTypes.BESTSELLERS:
         return page.result.bestsellers
+      case requestTypes.SEARCH:
+        return page.result.search_results
     }
   }).
   reduce((a, b) => a.concat(b), []).
@@ -12,7 +16,6 @@ const getProductCodes = results => results.
 
 const getProductDetails = async (productCodes, query = {}) => {
   const { client } = require("../../client")
-  const { requestTypes } = require("../../server/constants")
 
   const getProducts = productCodes.map(asin => client.get("/", { params: { type: requestTypes.PRODUCT, asin } }))
   const { bestseller = false, department = "", category = "", offer = false } = query
@@ -20,14 +23,16 @@ const getProductDetails = async (productCodes, query = {}) => {
   try {
     const productDetails = await Promise.all(getProducts)
     return productDetails.
-      map(({ data: { product } }) => ({
+      map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }) => ({
         ...product,
+        frequently_bought_together,
+        also_viewed,
+        also_bought,
         category,
         department,
         bestseller,
         offer
       }))
-    // .filter(product => product.price && product.is_prime)
   } catch (err) {
     throw new Error("Unable to retrieve product details")
   }

@@ -38,7 +38,6 @@ module.exports = (req, res) => {
           autoGenerateObjectIDIfNotExist: true
         })
         console.log(`Updated ${existingProducts.length} products in Algolia`)
-
         updates = buildUpdateOps(existingProducts)
       }
 
@@ -48,17 +47,14 @@ module.exports = (req, res) => {
           autoGenerateObjectIDIfNotExist: true
         })
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
-
         inserts = buildInsertOps(newProducts, objectIDs)
       }
 
       if (checkArray(updates) || checkArray(inserts)) {
         const Product = require("../server/model/products")
-
         console.log("Ready to execute DB operations:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
 
         await Product.bulkWrite([...updates, ...inserts])
-
         console.log("Saved products in DB")
       }
 
