@@ -1,6 +1,11 @@
 const { requestTypes } = require("../../server/constants")
 
-const getProductCodes = results => results.
+/**
+ * Retrieves product codes from rainforest collections API results
+ * filters out non-prime products
+ * @param {array} results 
+ */
+const getPrimeProductCodes = results => results.
   map(({ data: [page] }) => {
     switch (page.request.type) {
       case requestTypes.CATEGORY:
@@ -12,8 +17,14 @@ const getProductCodes = results => results.
     }
   }).
   reduce((a, b) => a.concat(b), []).
+  filter(product => product.is_prime).
   map(product => product.asin)
 
+/**
+ * Retrieves product details from rainforest API and filters out non prime products
+ * @param {array} productCodes 
+ * @param {object} query 
+ */
 const getProductDetails = async (productCodes, query = {}) => {
   const { client } = require("../../client")
 
@@ -38,11 +49,16 @@ const getProductDetails = async (productCodes, query = {}) => {
   }
 }
 
-const splitProductsByOpType = async (productCodes, products) => {
+/**
+ * Divides existing and new products
+ * @param {array} products 
+ */
+const splitProductsByOpType = async products => {
   const Product = require("../../server/model/products")
   try {
+    const productCodes = products.map(({ asin }) => asin)
     const existingProducts = await Product.find({ "asin": { $in: productCodes } }).lean()
-    const existingProductCodes = existingProducts.map(product => product.asin)
+    const existingProductCodes = existingProducts.map(({ asin }) => asin)
     const newProducts = products.filter(({ asin }) => !existingProductCodes.includes(asin))
 
     return { existingProducts, newProducts }
@@ -68,7 +84,7 @@ const buildInsertOps = (products, objectIDs) => checkArray(products) ? products.
 const checkArray = arr => Array.isArray(arr) && arr.length >= 1
 
 module.exports = {
-  getProductCodes,
+  getPrimeProductCodes,
   getProductDetails,
   splitProductsByOpType,
   buildUpdateOps,

@@ -1,7 +1,7 @@
 const dbConfig = () => {
   const mongoose = require("mongoose")
 
-  let db = mongoose.connection
+  const db = mongoose.connection
   if (db.readyState === 0) {
     mongoose.connect(process.env.DB_URL, {
       dbName: process.env.DB_NAME, useNewUrlParser: true, keepAlive: true, useFindAndModify: false,

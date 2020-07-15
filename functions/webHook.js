@@ -8,7 +8,7 @@ module.exports = (req, res) => {
   db.once("open", async () => {
     const axios = require("axios")
     const algoliaClient = require("./config/algolia")()
-    const { getProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray } = require("./helpers/hookHelpers")
+    const { getPrimeProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray } = require("./helpers/hookHelpers")
 
     try {
       const { result_set: { download_links: { json: { pages } } } } = req.body
@@ -18,7 +18,7 @@ module.exports = (req, res) => {
 
       console.log("Retrieved products - ready for preprocessing")
 
-      const productCodes = getProductCodes(results)
+      const productCodes = getPrimeProductCodes(results)
 
       console.log("Results preprocessing done - ready to get product details")
 
@@ -26,7 +26,7 @@ module.exports = (req, res) => {
 
       console.log(`Products: ${products.length}`)
 
-      const { existingProducts, newProducts } = await splitProductsByOpType(productCodes, products)
+      const { existingProducts, newProducts } = await splitProductsByOpType(products)
 
       const index = algoliaClient.initIndex("products")
 
