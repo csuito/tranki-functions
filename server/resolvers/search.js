@@ -19,7 +19,7 @@ const search = combineResolvers(
     }
 
     try {
-      const { data: { search_results, pagination } } = await client.get("/", { params })
+      const { data: { search_results, pagination } } = await client.get("/request", { params })
       return { search_results, pagination }
     } catch (e) {
       return { success: false }

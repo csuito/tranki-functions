@@ -1,9 +1,22 @@
+const { client } = require("../../client")
 const { requestTypes } = require("../../server/constants")
+
+/**
+ * Returns an array of requests for Rainforest collections results download links 
+ * @param {array} pages
+ * @returns {array}
+ */
+const getDownloadLinks = pages => pages.map(page => {
+  const urlStart = page.search("/download")
+  const url = page.substring(urlStart)
+  return client.get(url)
+})
 
 /**
  * Retrieves product codes from rainforest collections API results
  * filters out non-prime products
- * @param {array} results 
+ * @param {array} results
+ * @returns {array}
  */
 const getPrimeProductCodes = results => results.
   map(({ data: [page] }) => {
@@ -24,11 +37,14 @@ const getPrimeProductCodes = results => results.
  * Retrieves product details from rainforest API and filters out non prime products
  * @param {array} productCodes 
  * @param {object} query 
+ * @returns {array}
  */
 const getProductDetails = async (productCodes, query = {}) => {
-  const { client } = require("../../client")
+  const getProducts = productCodes.map(asin => client.get("/request", {
+    params: { type: requestTypes.PRODUCT, asin },
+    timeout: 35000
+  }))
 
-  const getProducts = productCodes.map(asin => client.get("/", { params: { type: requestTypes.PRODUCT, asin } }))
   const { bestseller = false, department = "", category = "", offer = false } = query
 
   try {
@@ -52,6 +68,7 @@ const getProductDetails = async (productCodes, query = {}) => {
 /**
  * Divides existing and new products
  * @param {array} products 
+ * @returns {object}
  */
 const splitProductsByOpType = async products => {
   const Product = require("../../server/model/products")
@@ -67,6 +84,11 @@ const splitProductsByOpType = async products => {
   }
 }
 
+/**
+ * Builds products DB update operations
+ * @param {array} products
+ * @returns {array}
+ */
 const buildUpdateOps = products => checkArray(products) ? products.map(product => ({
   updateOne: {
     filter: { asin: product.asin },
@@ -75,15 +97,27 @@ const buildUpdateOps = products => checkArray(products) ? products.map(product =
   }
 })) : []
 
+/**
+ * Builds products DB insert operations
+ * @param {array} products 
+ * @param {array} objectIDs
+ * @returns {array}
+ */
 const buildInsertOps = (products, objectIDs) => checkArray(products) ? products.map((product, i) => ({
   insertOne: {
     document: { ...product, objectID: objectIDs[i] },
   }
 })) : []
 
+/**
+ * Checks that array has at least 1 item
+ * @param {array} arr 
+ * @returns {boolean}
+ */
 const checkArray = arr => Array.isArray(arr) && arr.length >= 1
 
 module.exports = {
+  getDownloadLinks,
   getPrimeProductCodes,
   getProductDetails,
   splitProductsByOpType,

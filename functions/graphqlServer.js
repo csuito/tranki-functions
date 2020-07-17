@@ -1,4 +1,9 @@
+if (process.env.NODE_ENV === "local") {
+  require("dotenv").config()
+}
+
 const app = require("express")()
+
 const { https: { onRequest } } = require("firebase-functions")
 
 const { ApolloServer, makeExecutableSchema } = require("apollo-server-express")

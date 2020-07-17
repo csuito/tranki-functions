@@ -1,36 +1,38 @@
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   if (process.env.NODE_ENV === "local") {
     require("dotenv").config()
   }
 
-  const db = require("./config/db")()
+  const { connectDB, closeDB } = require("./config/db")
 
-  db.once("open", async () => {
-    const axios = require("axios")
-    const algoliaClient = require("./config/algolia")()
-    const { getPrimeProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray } = require("./helpers/hookHelpers")
+  await connectDB()
 
-    try {
-      const { result_set: { download_links: { json: { pages } } } } = req.body
-      const downloadLinks = pages.map(page => axios.get(page))
+  const { getDownloadLinks, getPrimeProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray } = require("./helpers/hookHelpers")
 
-      const results = await Promise.all(downloadLinks)
+  try {
+    const { result_set: { download_links: { json: { pages } } } } = req.body
 
-      console.log("Retrieved products - ready for preprocessing")
+    const downloadLinks = getDownloadLinks(pages)
 
-      const productCodes = getPrimeProductCodes(results)
+    const results = await Promise.all(downloadLinks)
 
-      console.log("Results preprocessing done - ready to get product details")
+    console.log("Retrieved products - ready for preprocessing")
 
-      const products = await getProductDetails(productCodes, req.query)
+    const productCodes = getPrimeProductCodes(results)
 
-      console.log(`Products: ${products.length}`)
+    console.log("Results preprocessing done - ready to get product details")
 
-      const { existingProducts, newProducts } = await splitProductsByOpType(products)
+    const products = await getProductDetails(productCodes, req.query)
 
+    console.log(`Products: ${products.length}`)
+
+    const { existingProducts, newProducts } = await splitProductsByOpType(products)
+
+    console.log("Products breakdown:", { existingProducts: existingProducts.length, newProducts: newProducts.length, totalProducts: existingProducts.length + newProducts.length })
+
+    if (checkArray(existingProducts) || checkArray(newProducts)) {
+      const algoliaClient = require("./config/algolia")()
       const index = algoliaClient.initIndex("products")
-
-      console.log("Products breakdown:", { existingProducts: existingProducts.length, newProducts: newProducts.length, totalProducts: existingProducts.length + newProducts.length })
 
       let updates = []
       if (checkArray(existingProducts)) {
@@ -50,18 +52,19 @@ module.exports = (req, res) => {
         inserts = buildInsertOps(newProducts, objectIDs)
       }
 
-      if (checkArray(updates) || checkArray(inserts)) {
-        const Product = require("../server/model/products")
-        console.log("Ready to execute DB operations:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
+      const Product = require("../server/model/products")
+      console.log("Ready to execute DB operations:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
 
-        await Product.bulkWrite([...updates, ...inserts])
-        console.log("Saved products in DB")
-      }
-
-      return res.status(200).send()
-    } catch (err) {
-      console.log({ err })
-      return res.status(500).send()
+      await Product.bulkWrite([...updates, ...inserts])
+      console.log("Saved products in DB")
     }
-  })
+
+    await closeDB()
+
+    return res.status(200).send()
+  } catch (err) {
+    await closeDB()
+
+    return res.status(500).send()
+  }
 }

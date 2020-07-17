@@ -18,7 +18,7 @@ const getBestsellers = combineResolvers(
     }
 
     try {
-      const { data: { bestsellers, pagination } } = await client.get("/", { params })
+      const { data: { bestsellers, pagination } } = await client.get("/request", { params })
       return { bestsellers, pagination }
     } catch (e) {
       return { success: false }

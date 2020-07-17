@@ -6,8 +6,8 @@ const axios = require("axios")
 class Client {
   constructor() {
     this.client = axios.create({
-      baseURL: "https://api.rainforestapi.com/request",
-      timeout: 35000,
+      baseURL: "https://api.rainforestapi.com",
+      timeout: 10000,
       headers: {
         "Content-Type": "application/json"
       },

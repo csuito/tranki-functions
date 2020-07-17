@@ -1,4 +1,6 @@
 module.exports = (() => {
   const admin = require("firebase-admin")
-  return admin.initializeApp()
+  if (!admin.apps.length) {
+    return admin.initializeApp()
+  }
 })()

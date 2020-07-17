@@ -48,7 +48,7 @@ const shortProduct = new Schema({
 
 const productSchema = new Schema({
   title: { type: String, required: true },
-  asin: { type: String, required: true, unique: true },
+  asin: { type: String, required: true, unique: true, index: true },
   link: { type: String, required: true },
   is_prime: { type: Boolean },
   image: { type: String },

@@ -17,7 +17,7 @@ const getStockEstimation = combineResolvers(
     }
 
     try {
-      const { data: { stock_estimation } } = await client.get("/", { params })
+      const { data: { stock_estimation } } = await client.get("/request", { params })
       return stock_estimation
     } catch (e) {
       return { success: false }

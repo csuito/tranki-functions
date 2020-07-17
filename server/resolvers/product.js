@@ -11,7 +11,7 @@ const getProduct = combineResolvers(
     const Product = require("../model/products")
 
     try {
-      return await Product.findOne({ asin })
+      await Product.findOne({ asin })
     } catch (e) {
       return { success: false, error: "Internal server error", message: "Unable to find product in DB" }
     }

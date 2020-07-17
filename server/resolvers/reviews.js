@@ -21,7 +21,7 @@ const getReviews = combineResolvers(
     }
 
     try {
-      const { data: { product, summary, top_positive, top_critical, reviews, pagination } } = await client.get("/", { params })
+      const { data: { product, summary, top_positive, top_critical, reviews, pagination } } = await client.get("/request", { params })
       return { product, summary, top_positive, top_critical, reviews, pagination }
     } catch (e) {
       return { success: false }
