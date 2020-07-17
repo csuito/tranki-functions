@@ -5,14 +5,20 @@ module.exports = async (req, res) => {
 
   const { connectDB, closeDB } = require("./config/db")
 
-  await connectDB()
-
-  const { getDownloadLinks, getPrimeProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray } = require("./helpers/hookHelpers")
+  try {
+    await connectDB()
+  } catch (err) {
+    throw new Error("Unable to connect DB")
+  }
 
   try {
+    const { getDownloadLinks, getPrimeProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray } = require("./helpers/hookHelpers")
+
     const { result_set: { download_links: { json: { pages } } } } = req.body
 
     const downloadLinks = getDownloadLinks(pages)
+
+    console.log("Download links retrieved - ready to get products")
 
     const results = await Promise.all(downloadLinks)
 
