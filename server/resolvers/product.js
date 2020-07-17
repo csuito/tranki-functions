@@ -9,11 +9,16 @@ const getProduct = combineResolvers(
   isAuthenticated,
   async (_, { asin }) => {
     const Product = require("../model/products")
+    const DBQuery = require("./helpers/dbSession")
 
     try {
-      await Product.findOne({ asin })
-    } catch (e) {
-      return { success: false, error: "Internal server error", message: "Unable to find product in DB" }
+      const query = Product.findOne({ asin }).lean()
+
+      return await DBQuery(query)
+    } catch (err) {
+      await closeDB()
+
+      throw new Error("Unable to find product in DB")
     }
   })
 

@@ -29,7 +29,7 @@ const connectDB = () => {
 const closeDB = () => {
   if (db.readyState === 1) {
     return new Promise(resolve => {
-      db.close(true, () => {
+      db.close(false, () => {
         console.log("Closing DB connection")
         resolve(true)
       })
