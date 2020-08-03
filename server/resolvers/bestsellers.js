@@ -2,26 +2,23 @@ const { combineResolvers } = require("graphql-resolvers")
 const { isAuthenticated } = require("./middleware/auth")
 
 /**
- * Returns a list of products based on a search_term
+ * Returns a list of bestsellers
  * @param {*} args
  */
 const getBestsellers = combineResolvers(
   isAuthenticated,
-  async (_, { url, page = 1 }) => {
-    const { client } = require("../../client")
-    const { requestTypes } = require("../constants")
-
-    const params = {
-      type: requestTypes.BESTSELLERS,
-      url,
-      page,
-    }
+  async (_, args) => {
+    const Product = require("../model/products")
+    const DBQuery = require("./helpers/dbSession")
 
     try {
-      const { data: { bestsellers, pagination } } = await client.get("/request", { params })
-      return { bestsellers, pagination }
-    } catch (e) {
-      return { success: false }
+      const query = Product.find({ bestseller: true }).lean()
+
+      return await DBQuery(query)
+    } catch (err) {
+      await closeDB()
+
+      throw new Error("Unable to find product in DB")
     }
   })
 

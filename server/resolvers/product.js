@@ -3,7 +3,7 @@ const { isAuthenticated } = require("./middleware/auth")
 
 /**
  * Retrieves a product by id
- * @param {*} asin - amazon product id
+ * @param {string} asin - amazon product id
  */
 const getProduct = combineResolvers(
   isAuthenticated,

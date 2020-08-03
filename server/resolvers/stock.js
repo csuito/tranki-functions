@@ -3,7 +3,7 @@ const { isAuthenticated } = require("./middleware/auth")
 
 /**
  * Retrieves a single product's stock estimation
- * @param {*} asin - amazon product id
+ * @param {string} asin - amazon product id
  */
 const getStockEstimation = combineResolvers(
   isAuthenticated,
