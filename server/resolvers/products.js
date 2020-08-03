@@ -5,17 +5,20 @@ const { isAuthenticated } = require("./middleware/auth")
  * Retrieves a product by id
  * @param {*} asin - amazon product id
  */
-const getProduct = combineResolvers(
-  isAuthenticated,
-  async (_, { asin }) => {
+const getProducts = combineResolvers(
+  // isAuthenticated,
+  async (_, { department = null, category = null }) => {
     const Product = require("../model/products")
     const DBQuery = require("./helpers/dbSession")
     try {
-      const query = Product.findOne({ asin }).lean()
+      let dbQuery = {}
+      if (department) dbQuery.department = department
+      if (category) dbQuery.category = category
+      const query = Product.find(dbQuery).lean()
       return await DBQuery(query)
     } catch (err) {
       throw new Error("Unable to find product in DB")
     }
   })
 
-module.exports = getProduct
+module.exports = getProducts
