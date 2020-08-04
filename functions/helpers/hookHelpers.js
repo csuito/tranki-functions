@@ -30,7 +30,7 @@ const getPrimeProductCodes = results => results.
     }
   }).
   reduce((a, b) => a.concat(b), []).
-  filter(product => product.is_prime).
+  filter(product => containsRequiredProperties(product)).
   map(product => product.asin)
 
 /**
@@ -74,8 +74,11 @@ const splitProductsByOpType = async products => {
   const Product = require("../../server/model/products")
   try {
     const productCodes = products.map(({ asin }) => asin)
+
     const existingProducts = await Product.find({ "asin": { $in: productCodes } }).lean()
+
     const existingProductCodes = existingProducts.map(({ asin }) => asin)
+
     const newProducts = products.filter(({ asin }) => !existingProductCodes.includes(asin))
 
     return { existingProducts, newProducts }
@@ -115,6 +118,16 @@ const buildInsertOps = (products, objectIDs) => checkArray(products) ? products.
  * @returns {boolean}
  */
 const checkArray = arr => Array.isArray(arr) && arr.length >= 1
+
+/**
+ * Checks that product has all required properties
+ * @param {object} product 
+ */
+const containsRequiredProperties = product => product &&
+  product.asin &&
+  product.title &&
+  product.is_prime &&
+  product.link
 
 module.exports = {
   getDownloadLinks,

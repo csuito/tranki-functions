@@ -8,12 +8,13 @@ const DBQuery = async query => {
 
   try {
     await connectDB()
+
   } catch (err) {
+
     throw new Error("Unable to connect DB")
   }
 
   try {
-
     const result = await query
 
     await closeDB()

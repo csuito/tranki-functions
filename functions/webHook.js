@@ -45,7 +45,9 @@ module.exports = async (req, res) => {
         await index.saveObjects(existingProducts, {
           autoGenerateObjectIDIfNotExist: true
         })
+
         console.log(`Updated ${existingProducts.length} products in Algolia`)
+
         updates = buildUpdateOps(existingProducts)
       }
 
@@ -55,6 +57,7 @@ module.exports = async (req, res) => {
           autoGenerateObjectIDIfNotExist: true
         })
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
+
         inserts = buildInsertOps(newProducts, objectIDs)
       }
 
@@ -69,6 +72,8 @@ module.exports = async (req, res) => {
 
     return res.status(200).send()
   } catch (err) {
+    console.log({ err })
+
     await closeDB()
 
     return res.status(500).send()
