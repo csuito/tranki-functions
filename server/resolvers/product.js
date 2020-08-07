@@ -16,13 +16,10 @@ const getProduct = combineResolvers(
       const dbResponse = await DBQuery(query)
       if (!dbResponse) {
         const product = await getProductDetails([asin], { category: 'variant' })
-        if (product) {
-          await Product.create(product)
-          return product
-        } else {
-          throw new Error('Unable to find product')
-        }
-      }
+        const newProduct = Product.create(product[0])
+        return await DBQuery(newProduct)
+      } else
+        return dbResponse
     } catch (err) {
       throw new Error("Unable to find product")
     }
