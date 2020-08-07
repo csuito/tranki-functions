@@ -1,5 +1,6 @@
 const { combineResolvers } = require("graphql-resolvers")
 const { isAuthenticated } = require("./middleware/auth")
+const { getProductDetails } = require('../../functions/helpers/hookHelpers')
 
 /**
  * Retrieves a product by id
@@ -12,9 +13,18 @@ const getProduct = combineResolvers(
     const DBQuery = require("./helpers/dbSession")
     try {
       const query = Product.findOne({ asin }).lean()
-      return await DBQuery(query)
+      const dbResponse = await DBQuery(query)
+      if (!dbResponse) {
+        const product = await getProductDetails([asin], { category: 'variant' })
+        if (product) {
+          await Product.create(product)
+          return product
+        } else {
+          throw new Error('Unable to find product')
+        }
+      }
     } catch (err) {
-      throw new Error("Unable to find product in DB")
+      throw new Error("Unable to find product")
     }
   })
 
