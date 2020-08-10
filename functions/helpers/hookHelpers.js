@@ -31,7 +31,11 @@ const getPrimeProductCodes = results => results.
   }).
   reduce((a, b) => a.concat(b), []).
   filter(product => containsRequiredProperties(product)).
-  map(product => product.asin)
+  map(product => (
+    {
+      asin: product.asin,
+      variants: product.variants && product.variants.length > 0 ? product.variants.map(v => v.asin) : []
+    }))
 
 /**
  * Retrieves product details from rainforest API and filters out non prime products
@@ -40,29 +44,42 @@ const getPrimeProductCodes = results => results.
  * @returns {array}
  */
 const getProductDetails = async (productCodes, query = {}) => {
-  const getProducts = productCodes.map(asin => client.get("/request", {
-    params: { type: requestTypes.PRODUCT, asin },
-    timeout: 35000
-  }))
-
-  const { bestseller = false, department = "", category = "", offer = false } = query
-
-  try {
-    const productDetails = await Promise.all(getProducts)
-    return productDetails.
-      map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }) => ({
-        ...product,
-        frequently_bought_together,
-        also_viewed,
-        also_bought,
-        category,
-        department,
-        bestseller,
-        offer
-      }))
-  } catch (err) {
-    throw new Error("Unable to retrieve product details")
+  let results = []
+  for (const product of productCodes) {
+    const { asin, variants } = product
+    const { data: { product, frequently_bought_together, also_viewed, also_bought } } = await client.get("/request", {
+      params: { type: requestTypes.PRODUCT, asin },
+      timeout: 35000
+    })
+    results.push({
+      ...product, frequently_bought_together, also_bought, also_viewed,
+      variants: variants && variants.length ? await Promise.all(variants.map(v => client.get("/request", {
+        params: { type: requestTypes.PRODUCT, asin: v.asin },
+        timeout: 35000
+      }))) : []
+    })
   }
+  return results
+
+  // const getProducts = productCodes.map(({ asin }) => )
+  // const getVariants = productCodes.reduce((prev, cur) => curr.variants?.forEach(v => { prev.push(v.asin) }), [])
+  // const { bestseller = false, department = "", category = "", offer = false } = query
+  // try {
+  //   const productDetails = await Promise.all(getProducts)
+  //   return productDetails.
+  //     map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }) => ({
+  //       ...product,
+  //       frequently_bought_together,
+  //       also_viewed,
+  //       also_bought,
+  //       category,
+  //       department,
+  //       bestseller,
+  //       offer
+  //     }))
+  // } catch (err) {
+  //   throw new Error("Unable to retrieve product details")
+  // }
 }
 
 /**
