@@ -43,6 +43,26 @@ const shortProduct = new Schema({
   asin: { type: String },
   title: { type: String },
   image: { type: String },
+  images: [image],
+  link: { type: String },
+  main_image: {
+    link: { type: String }
+  },
+  description: { type: String },
+  is_prime: { type: Boolean },
+  rating: { type: Number },
+  ratings_total: { type: Number },
+  reviews_total: { type: Number },
+  weight: { type: String },
+  dimensions: { type: String },
+  shipping_weight: { type: String },
+  buybox_winner: {
+    is_prime: { type: Boolean },
+    price,
+    rrp: price,
+    shipping: price,
+    save: price
+  },
   price
 }, { _id: false })
 
@@ -98,7 +118,8 @@ const productSchema = new Schema({
     products: [shortProduct]
   },
   also_viewed: [shortProduct],
-  also_bought: [shortProduct]
+  also_bought: [shortProduct],
+  objectID: { type: String, required: true }
 })
 
 module.exports = model("Product", productSchema)
