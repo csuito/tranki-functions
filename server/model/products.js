@@ -54,7 +54,10 @@ const shortProduct = new Schema({
   ratings_total: { type: Number },
   reviews_total: { type: Number },
   weight: { type: String },
-  dimensions: { type: String },
+  dimensions: [{
+    name: { type: String },
+    value: { type: String }
+  }],
   shipping_weight: { type: String },
   buybox_winner: {
     is_prime: { type: Boolean },
