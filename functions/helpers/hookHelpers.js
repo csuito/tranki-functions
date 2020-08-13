@@ -43,7 +43,7 @@ const getProductDetails = async (products, query = {}) => {
   // So we can reduce the products array if needed
   // products = products.slice(products.length - 2)
   const getProducts = products.map(asin => client.get("/request", {
-    params: { type: requestTypes.PRODUCT, asin },
+    params: { type: requestTypes.PRODUCT, asin, language: 'es_US' },
     timeout: 350000
   }))
   const { bestseller = false, department = "", category = "", offer = false } = query
