@@ -40,15 +40,38 @@ const getPrimeProductCodes = results => results.
  * @returns {array}
  */
 const getProductDetails = async (products, query = {}) => {
+  // So we can reduce the products array if needed
+  // products = products.slice(products.length - 2)
   const getProducts = products.map(asin => client.get("/request", {
-    params: { type: requestTypes.PRODUCT, asin },
+    params: { type: requestTypes.PRODUCT, asin, language: 'es_US' },
     timeout: 350000
   }))
   const { bestseller = false, department = "", category = "", offer = false } = query
   try {
     const productDetails = await Promise.all(getProducts)
+
+
+    /** 
+     * The commented code will allow us to fetch variants details, 
+     * instead of using the short object that comes with the parent object 
+     ***/
+
+    // let productVariants = productDetails.map(p => { return p.data && p.data.product.variants ? p.data.product.variants : [] })
+    // const mergedVariants = productVariants.map(v => v && v.length ? v.map(_v => v.asin) : "")
+    // const _allVariants = mergedVariants.map(v => v ? client.get("/request", {
+    //   params: { type: requestTypes.PRODUCT, asin: v.asin },
+    //   timeout: 350000
+    // }) : {})
+    // const allVariants = await Promise.all(_allVariants)
+    // productVariants = productVariants.map(v => {
+    //   return v && v.length ?
+    //     v.map(_v => allVariants.find(av => av.asin === _v.asin))
+    //     : []
+    // })
+
+
     const allProducts = productDetails.
-      map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }) => ({
+      map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }, idx) => ({
         ...product,
         frequently_bought_together,
         also_viewed,
@@ -57,16 +80,8 @@ const getProductDetails = async (products, query = {}) => {
         department,
         bestseller,
         offer,
+        // variants: productDetails[idx]
       }))
-    for (let i = 0; i < allProducts.length; i++) {
-      const { variants } = allProducts[i]
-      const _variants = variants && variants.length > 0 ? variants.map(v => client.get("/request", {
-        params: { type: requestTypes.PRODUCT, asin: v.asin },
-        timeout: 350000
-      })) : []
-      const allVariants = await (await Promise.all(_variants)).map(v => v.data.product)
-      allProducts[i].variants = allVariants
-    }
     return allProducts
   } catch (err) {
     throw new Error("Unable to retrieve product details")
