@@ -103,6 +103,7 @@ module.exports = gql`
     is_prime: Boolean
     rating: Float
     ratings_total: Int
+    images: [Media]
   }
 
   type Attribute {
