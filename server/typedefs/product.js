@@ -54,6 +54,9 @@ module.exports = gql`
     asin: ID
     link: String
     price: Price
+    image: String
+    images: [Media]
+    attributes: [Attribute]
   }
 
   type BuyBoxWinner {
@@ -103,7 +106,6 @@ module.exports = gql`
     is_prime: Boolean
     rating: Float
     ratings_total: Int
-    images: [Media]
   }
 
   type Attribute {

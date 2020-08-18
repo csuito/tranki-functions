@@ -1,6 +1,9 @@
 const { client } = require("../../client")
 const { requestTypes } = require("../../server/constants")
 
+const isEmpty = (obj) => Object.keys(obj).length === 0 && obj.constructor === Object
+
+
 /**
  * Returns an array of requests for Rainforest collections results download links 
  * @param {array} pages
@@ -41,37 +44,85 @@ const getPrimeProductCodes = results => results.
  */
 const getProductDetails = async (products, query = {}) => {
   // So we can reduce the products array if needed
-  // products = products.slice(products.length - 2)
+  // products = products.slice(products.length - 1)
+  // console.log(`Test mode: Fetching ${products.length} products`)
   const getProducts = products.map(asin => client.get("/request", {
     params: { type: requestTypes.PRODUCT, asin, language: 'es_US' },
     timeout: 350000
   }))
   const { bestseller = false, department = "", category = "", offer = false } = query
   try {
-    const productDetails = await Promise.all(getProducts)
-
+    let productDetails = await Promise.all(getProducts)
 
     /** 
      * The commented code will allow us to fetch variants details, 
      * instead of using the short object that comes with the parent object 
      ***/
 
-    // let productVariants = productDetails.map(p => { return p.data && p.data.product.variants ? p.data.product.variants : [] })
-    // const mergedVariants = productVariants.map(v => v && v.length ? v.map(_v => v.asin) : "")
-    // const _allVariants = mergedVariants.map(v => v ? client.get("/request", {
-    //   params: { type: requestTypes.PRODUCT, asin: v.asin },
-    //   timeout: 350000
-    // }) : {})
-    // const allVariants = await Promise.all(_allVariants)
-    // productVariants = productVariants.map(v => {
-    //   return v && v.length ?
-    //     v.map(_v => allVariants.find(av => av.asin === _v.asin))
-    //     : []
-    // })
+    const productVariants = productDetails
+      .map(p => {
+        const { product } = p.data
+        console.log(product.variants)
+        return product
+          && product.variants
+          && product.variants.length > 0
+          ? { variants: product.variants, parent: product.asin } : {}
+      })
+      .filter(p => p.variants
+        .filter(v => !v || !v.images || !v.price).length > 0)
 
+    console.log(`Fetch ${productVariants.reduce((p, c) => p + c.variants.length, 0)} variants`)
+
+    const _allVariants = productVariants
+      .reduce((p, c) => p.concat(c.variants), [])
+      .map(v => v.asin)
+      .map(asin => {
+        // console.log({ asin })
+        return client.get("/request", {
+          params: { type: requestTypes.PRODUCT, asin },
+          timeout: 350000
+        })
+      })
+
+    const allVariants = await Promise.all(_allVariants)
+
+    productDetails = productDetails
+      .map(p => {
+        const { product } = p.data
+        let pVariants = productVariants
+          .find(v => product.asin === v.parent)
+        if (pVariants) {
+          pVariants = pVariants.variants
+            .map(v => { return v && v.asin ? { ...allVariants.find(av => av.data.request_parameters.asin === v.asin), title: v.title, link: v.link } : {} })
+            .map(v => {
+              if (v && v.data && v.data.product && !isEmpty(v.data.product)) {
+                const variant = v.data.product
+                const title = v.title
+                const link = v.link
+                const price = variant.price || variant.buybox_winner ? variant.buybox_winner.price : false
+                const attributes = variant.attributes && variant.attributes.length > 0 ? variant.attributes : false
+                const images = variant.images && variant.images.length > 0 ? variant.images : false
+                return !isEmpty(variant) && price && images && attributes ? ({
+                  title, link, price: variant.price || variant.buybox_winner.price,
+                  // dimensions: { name: "size", value: variant.dimensions },
+                  asin: variant.asin, image: variant.image, images: variant.images, attributes: variant.attributes
+                }) : false
+              }
+              return false
+            })
+            .filter(v => v && v.price && v.images && v.images.length > 0 && v.link && v.attributes && v.attributes.length > 0)
+        }
+        const result = {
+          ...p, data: { ...p.data, product: { ...product, variants: pVariants } }
+        }
+        // console.log(result.data.product)
+        return result
+
+
+      })
 
     const allProducts = productDetails.
-      map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }, idx) => ({
+      map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }) => ({
         ...product,
         frequently_bought_together,
         also_viewed,
@@ -79,11 +130,12 @@ const getProductDetails = async (products, query = {}) => {
         category,
         department,
         bestseller,
-        offer,
-        // variants: productDetails[idx]
+        offer
       }))
+
     return allProducts
   } catch (err) {
+    console.log(err)
     throw new Error("Unable to retrieve product details")
   }
 }

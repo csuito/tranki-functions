@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
 
       let inserts = []
       if (checkArray(newProducts)) {
-        const algoliaData = newProducts.map(np => ({ ...np, variants: [] }))
+        const algoliaData = newProducts.map(p => ({ ...p, variants: [] }))
         const { objectIDs } = await index.saveObjects(algoliaData, {
           autoGenerateObjectIDIfNotExist: true
         })
