@@ -7,7 +7,9 @@
     "start": "env NODE_ENV=local functions-framework --target=$npm_config_func",
     "test": "mocha test --exit",
     "dev": "nodemon index.js",
-    "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs10 --env-vars-file $npm_config_func.env.yaml --trigger-http"
+    "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs10 --env-vars-file $npm_config_func.env.yaml --trigger-http",
+    "deploy-hook": "npm run deploy --func=webHook",
+    "deploy-api": "npm run deploy --func=api"
   },
   "keywords": [],
   "author": "",

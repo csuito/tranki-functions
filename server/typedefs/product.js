@@ -56,6 +56,7 @@ module.exports = gql`
     price: Price
     image: String
     images: [Media]
+    attributes: [Attribute]
   }
 
   type BuyBoxWinner {

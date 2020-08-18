@@ -48,6 +48,7 @@ const shortProduct = new Schema({
   main_image: {
     link: { type: String }
   },
+  attributes: [attribute],
   description: { type: String },
   is_prime: { type: Boolean },
   rating: { type: Number },
