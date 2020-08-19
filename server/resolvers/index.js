@@ -7,5 +7,7 @@ module.exports = {
     stock: require("./stock"),
     reviews: require("./reviews"),
     bestsellers: require("./bestsellers"),
+    banners: require("./banners"),
+    departments: require("./departments")
   }
 }

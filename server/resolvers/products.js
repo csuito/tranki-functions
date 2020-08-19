@@ -6,7 +6,7 @@ const { isAuthenticated } = require("./middleware/auth")
  * @param {*} asin - amazon product id
  */
 const getProducts = combineResolvers(
-  // isAuthenticated,
+  isAuthenticated,
   async (_, { department = null, category = null }) => {
     const Product = require("../model/products")
     const DBQuery = require("./helpers/dbSession")
