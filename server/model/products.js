@@ -126,4 +126,4 @@ const productSchema = new Schema({
   objectID: { type: String, required: true }
 })
 
-module.exports = model("Product", productSchema)
+module.exports = model("product", productSchema)
