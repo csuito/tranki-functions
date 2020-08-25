@@ -22,7 +22,7 @@ const DBQuery = async query => {
     return result
   } catch (err) {
     await closeDB()
-
+    console.log(err)
     throw new Error("Error executing DB operation")
   }
 }
