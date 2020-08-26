@@ -1,5 +1,5 @@
 const { orders, order, createOrder, updateOrder, userOrders } = require("./orders")
-const { createUser, updateUser, addUserAddress, updateUserAddress, addUserProduct, user, users, activeUsers, changeUserStatus } = require("./users")
+const { createUser, updateUser, addUserAddress, updateUserAddress, addUserProduct, user, users, activeUsers, changeUserStatus, userExists } = require("./users")
 module.exports = {
   Query: {
     orders,
@@ -8,6 +8,7 @@ module.exports = {
     user,
     users,
     activeUsers,
+    userExists,
     product: require("./product"),
     products: require("./products"),
     categories: require("./categories"),

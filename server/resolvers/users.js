@@ -1,10 +1,25 @@
 const { combineResolvers } = require("graphql-resolvers")
 const { isOwner, isAdmin } = require("./middleware/auth")
 const DBQuery = require("./helpers/dbSession")
+const User = require("../model/users")
 
 module.exports = {
+
+  userExists: async (_, { email }, ctx) => {
+    try {
+      const query = User.findOne({ email })
+      const user = await DBQuery(query)
+      if (user) {
+        return true
+      } else {
+        return false
+      }
+    } catch (e) {
+      throw new Error(e)
+    }
+  },
+
   createUser: async (_, { input }) => {
-    const User = require("../model/users")
     try {
       const query = User.create(input)
       return await DBQuery(query)
@@ -16,7 +31,6 @@ module.exports = {
   updateUser: combineResolvers(
     isOwner,
     async (_, { input }, ctx) => {
-      const User = require("../model/users")
       const { firebaseID, firstName, lastName, phoneNumber } = input
       try {
         const query = User.findOneAndUpdate(
@@ -32,7 +46,6 @@ module.exports = {
   addUserAddress: combineResolvers(
     isOwner,
     async (_, { input }) => {
-      const User = require("../model/users")
       try {
         const query = User.findOneAndUpdate(
           { firebaseID: input.firebaseID },
@@ -47,7 +60,6 @@ module.exports = {
   updateUserAddress: combineResolvers(
     isOwner,
     async (_, { input }) => {
-      const User = require("../model/users")
       try {
         const query = User.findOneAndUpdate(
           { firebaseID: input.firebaseID, 'shippingAddresses._id': input.addressID },
@@ -62,7 +74,6 @@ module.exports = {
   addUserProduct: combineResolvers(
     isOwner,
     async (_, { input }) => {
-      const User = require("../model/users")
 
       try {
         const query = User.findOneAndUpdate(
@@ -79,7 +90,6 @@ module.exports = {
   user: combineResolvers(
     isOwner,
     async (_, { input: { firebaseID } }) => {
-      const User = require("../model/users")
 
       try {
         const query = User.findOne({ firebaseID })
@@ -92,7 +102,6 @@ module.exports = {
   users: combineResolvers(
     isAdmin,
     async () => {
-      const User = require("../model/users")
 
       try {
         const query = User.find()
@@ -105,7 +114,6 @@ module.exports = {
   activeUsers: combineResolvers(
     isAdmin,
     async () => {
-      const User = require("../model/users")
       try {
         const query = User.find({ status: "active" })
         return await DBQuery(query)
@@ -117,7 +125,6 @@ module.exports = {
   changeUserStatus: combineResolvers(
     isOwner,
     async (_, { input: { firebaseID, status } }) => {
-      const User = require("../model/users")
       try {
         const query = User.findOneAndUpdate(
           { firebaseID },
