@@ -68,8 +68,8 @@ const getProductDetails = async (products, query = {}) => {
           && product.variants.length > 0
           ? { variants: product.variants, parent: product.asin } : {}
       })
-      .filter(p => p.variants
-        .filter(v => !v || !v.images || !v.price).length > 0)
+      .filter(p => p.variants && p.variants.length > 0 ?
+        p.variants.filter(v => !v || !v.images || !v.price).length > 0 : false)
 
     console.log(`Fetch ${productVariants.reduce((p, c) => p + c.variants.length, 0)} variants`)
 
@@ -201,7 +201,7 @@ const checkArray = arr => Array.isArray(arr) && arr.length >= 1
 const containsRequiredProperties = product => product &&
   product.asin &&
   product.title &&
-  product.is_prime &&
+  // product.is_prime &&
   product.link
 
 module.exports = {
