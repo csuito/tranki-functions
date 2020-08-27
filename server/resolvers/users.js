@@ -5,9 +5,13 @@ const User = require("../model/users")
 
 module.exports = {
 
-  userExists: async (_, { email }, ctx) => {
+  userExists: async (_, { email, firebaseID, phoneNumber }, ctx) => {
     try {
-      const query = User.findOne({ email })
+      let queryParams = {}
+      if (email) queryParams.email = email
+      if (firebaseID) queryParams.firebaseID = firebaseID
+      if (phoneNumber) queryParams.phoneNumber = phoneNumber
+      const query = User.findOne(queryParams)
       const user = await DBQuery(query)
       if (user) {
         return true
