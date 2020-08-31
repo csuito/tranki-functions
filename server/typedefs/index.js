@@ -10,6 +10,7 @@ const departmentSchema = require("./department")
 const bannerSchema = require("./banner")
 const userSchema = require("./users")
 const ordersSchema = require("./orders")
+const shippingCostSchema = require('./shipping-cost')
 
 const queries = gql`
   type Query {
@@ -29,6 +30,7 @@ const queries = gql`
     bestsellers(url: String! page: Int): Bestsellers,
     departments: [Department]
     banners: [Banner]
+    shipping(asins:[String!]!): ShippingCost
   }
 `
 
@@ -45,4 +47,4 @@ const mutations = gql`
   }
 `
 
-module.exports = [productSchema, categorySchema, searchSchema, stockSchema, reviewSchema, bestsellerSchema, departmentSchema, bannerSchema, userSchema, ordersSchema, queries, mutations]
+module.exports = [productSchema, categorySchema, searchSchema, stockSchema, reviewSchema, bestsellerSchema, departmentSchema, bannerSchema, userSchema, ordersSchema, shippingCostSchema, queries, mutations]
