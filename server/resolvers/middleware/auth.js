@@ -41,8 +41,10 @@ module.exports = {
    * @param ctx
    */
   isOwner: async (_, { input: { firebaseID } }, { auth }) => {
+    const app = require("../../../functions/config/firebase")
+    const { skip } = require("graphql-resolvers")
     try {
-      const { user_id } = await admin.auth().verifyIdToken(auth)
+      const { user_id } = await app.auth().verifyIdToken(auth)
       if (user_id !== firebaseID) throw new Error("Unauthorized")
       return skip
     } catch (e) {
@@ -56,8 +58,10 @@ module.exports = {
    * @param ctx
    */
   isAdmin: async (_, args, { auth }) => {
+    const app = require("../../../functions/config/firebase")
+    const { skip } = require("graphql-resolvers")
     try {
-      const { roles } = await admin.auth().verifyIdToken(auth)
+      const { roles } = await app.auth().verifyIdToken(auth)
       if (!roles || !roles.includes("admin")) throw new Error("Unauthorized")
       return skip
     } catch (e) {
@@ -71,8 +75,10 @@ module.exports = {
    * @param ctx
    */
   isCourier: async (_, { input: { courierID } }, { auth }) => {
+    const app = require("../../../functions/config/firebase")
+    const { skip } = require("graphql-resolvers")
     try {
-      const { user_id } = await admin.auth().verifyIdToken(auth)
+      const { user_id } = await app.auth().verifyIdToken(auth)
       if (user_id !== courierID) throw new Error("Unauthorized")
       return skip
     } catch (e) {

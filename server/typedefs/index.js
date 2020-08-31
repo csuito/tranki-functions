@@ -15,6 +15,7 @@ const queries = gql`
   type Query {
     product(asin: ID!): Product
     users: [User]
+    userExists(email: String firebaseID: String phoneNumber: String): Boolean!
     orders: [Order]
     activeUsers: [User]
     userOrders(userID: ID!): [Order]
