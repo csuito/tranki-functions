@@ -43,10 +43,27 @@ module.exports = async (req, res) => {
     if (checkArray(existingProducts) || checkArray(newProducts)) {
       const algoliaClient = require("./config/algolia")()
       const index = algoliaClient.initIndex("products")
-
+      const algoliaProducts = existingProducts.map(p => ({
+        objectID: p.objectID,
+        title: p.title,
+        department: p.department,
+        bestseller: p.bestseller,
+        buybox_winner: p.buybox_winner,
+        asin: p.asin,
+        parent_asin: p.parent_asin,
+        link: p.link,
+        brand: p.brand,
+        description: p.description,
+        rating: p.rating,
+        ratings_total: p.ratings_total,
+        main_image: p.main_image,
+        images: p.images,
+        feature_bullets: p.feature_bullets,
+        frequently_bought_together: p.frequently_bought_together
+      }))
       let updates = []
       if (checkArray(existingProducts)) {
-        await index.saveObjects(existingProducts, {
+        await index.saveObjects(algoliaProducts, {
           autoGenerateObjectIDIfNotExist: true
         })
 
@@ -57,8 +74,25 @@ module.exports = async (req, res) => {
 
       let inserts = []
       if (checkArray(newProducts)) {
-        const algoliaData = newProducts.map(p => ({ ...p, variants: [] }))
-        const { objectIDs } = await index.saveObjects(algoliaData, {
+        const algoliaProducts = existingProducts.map(p => ({
+          objectID: p.objectID,
+          title: p.title,
+          department: p.department,
+          bestseller: p.bestseller,
+          buybox_winner: p.buybox_winner,
+          asin: p.asin,
+          parent_asin: p.parent_asin,
+          link: p.link,
+          brand: p.brand,
+          description: p.description,
+          rating: p.rating,
+          ratings_total: p.ratings_total,
+          main_image: p.main_image,
+          images: p.images,
+          feature_bullets: p.feature_bullets,
+          frequently_bought_together: p.frequently_bought_together
+        }))
+        const { objectIDs } = await index.saveObjects(algoliaProducts, {
           autoGenerateObjectIDIfNotExist: true
         })
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
