@@ -62,8 +62,11 @@ module.exports = async (req, res) => {
           autoGenerateObjectIDIfNotExist: true
         })
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
-
-        inserts = buildInsertOps(newProducts, objectIDs)
+        const newUniqueProducts = [...new Map(
+          newProducts.map
+            (item => [item['asin'], item])).values()
+        ]
+        inserts = buildInsertOps(newUniqueProducts, objectIDs)
       }
 
       const Product = require("../server/model/products")

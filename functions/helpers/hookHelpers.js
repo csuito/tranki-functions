@@ -21,20 +21,23 @@ const getDownloadLinks = pages => pages.map(page => {
  * @param {array} results
  * @returns {array}
  */
-const getPrimeProductCodes = results => results.
-  map(({ data: [page] }) => {
-    switch (page.request.type) {
+
+const getPrimeProductCodes = results => results
+  .reduce((prev, curr) => prev.concat(curr.data), [])
+  .map(data => data.result)
+  .reduce((prev, curr) => {
+    switch (curr.request_parameters.type) {
       case requestTypes.CATEGORY:
-        return page.result.category_results
+        return prev.concat(curr.category_results)
       case requestTypes.BESTSELLERS:
-        return page.result.bestsellers
+        return prev.concat(curr.bestsellers)
       case requestTypes.SEARCH:
-        return page.result.search_results
+        return prev.concat(curr.search_results)
     }
-  }).
-  reduce((a, b) => a.concat(b), []).
-  filter(product => containsRequiredProperties(product)).
-  map(product => product.asin)
+  }, [])
+  .filter(product => containsRequiredProperties(product))
+  .map(product => product.asin)
+
 
 /**
  * Retrieves product details from rainforest API and filters out non prime products
@@ -62,7 +65,6 @@ const getProductDetails = async (products, query = {}) => {
     const productVariants = productDetails
       .map(p => {
         const { product } = p.data
-        console.log(product.variants)
         return product
           && product.variants
           && product.variants.length > 0
@@ -77,7 +79,6 @@ const getProductDetails = async (products, query = {}) => {
       .reduce((p, c) => p.concat(c.variants), [])
       .map(v => v.asin)
       .map(asin => {
-        // console.log({ asin })
         return client.get("/request", {
           params: { type: requestTypes.PRODUCT, asin },
           timeout: 350000
@@ -101,9 +102,11 @@ const getProductDetails = async (products, query = {}) => {
                 const link = v.link
                 const price = variant.price || variant.buybox_winner ? variant.buybox_winner.price : false
                 const attributes = variant.attributes && variant.attributes.length > 0 ? variant.attributes : false
+                const specifications = variant.specifications && variant.specifications.length > 0 ? variant.specifications : false
                 const images = variant.images && variant.images.length > 0 ? variant.images : false
-                return !isEmpty(variant) && price && images && attributes ? ({
+                return !isEmpty(variant) && price && images && attributes && specifications ? ({
                   title, link, price: variant.price || variant.buybox_winner.price,
+                  specifications,
                   // dimensions: { name: "size", value: variant.dimensions },
                   asin: variant.asin, image: variant.image, images: variant.images, attributes: variant.attributes
                 }) : false
@@ -115,7 +118,6 @@ const getProductDetails = async (products, query = {}) => {
         const result = {
           ...p, data: { ...p.data, product: { ...product, variants: pVariants } }
         }
-        // console.log(result.data.product)
         return result
 
 
@@ -132,7 +134,6 @@ const getProductDetails = async (products, query = {}) => {
         bestseller,
         offer
       }))
-
     return allProducts
   } catch (err) {
     console.log(err)

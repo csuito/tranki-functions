@@ -44,6 +44,7 @@ const shortProduct = new Schema({
   title: { type: String },
   image: { type: String },
   images: [image],
+  specifications: [attribute],
   link: { type: String },
   main_image: {
     link: { type: String }
