@@ -38,9 +38,13 @@ function getSpecs(product) {
  */
 const getShippingCosts = combineResolvers(
   // isAuthenticated,
-  async (_, { asins }) => {
+  async (_, { input }) => {
 
-    asins = asins.filter(a => a)
+
+
+    let asins = input
+      .map(a => a.asin)
+
     if (asins.length === 0) {
       return new Error('No asins provided')
     }
@@ -149,7 +153,9 @@ const getShippingCosts = combineResolvers(
     const dynamicFeeProducts = products.filter(p => !flatFeeDepartments.includes(p.department))
     let airCost = 0, seaCost = 0, minVol = 0.33, courierFtPrice = 14, courierLbPrice = 12, minWeight = 1
     for (let i = 0; i < dynamicFeeProducts.length; i++) {
+
       const p = dynamicFeeProducts[i]
+      const { quantity: qty } = input.find(i => i.asin === p.asin)
 
       let weight = false, dimensions = false,
         dimensionUnit = false, weightUnit = false,
@@ -161,7 +167,7 @@ const getShippingCosts = combineResolvers(
           dimensionSpec = dimensionSpec[0]
           dimensionSpec = dimensionSpec.split(" ").filter(x => x)
           dimensionUnit = dimensionSpec[dimensionSpec.length - 1]
-          const dimensionCalc = dimensionSpec.reduce((prev, curr) => curr && !isNaN(curr) ? prev * curr : prev, 1)
+          const dimensionCalc = (dimensionSpec.reduce((prev, curr) => curr && !isNaN(curr) ? prev * curr : prev, 1) * qty)
           // Cm to inches conversion
           if (dimensionUnit === "cm") {
             dimensions = dimensionCalc * 0.0610237
@@ -184,6 +190,10 @@ const getShippingCosts = combineResolvers(
           if (weightUnit === "onzas" || weightUnit === "ounces") {
             weight = weight / 16
           }
+
+          // Multiplying by quantity
+          weight *= qty
+
           if (weight && weight < minWeight) {
             weight = minWeight
           }

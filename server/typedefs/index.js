@@ -30,7 +30,7 @@ const queries = gql`
     bestsellers(url: String! page: Int): Bestsellers,
     departments: [Department]
     banners: [Banner]
-    shipping(asins:[String!]!): ShippingCost
+    shipping(input:[GetShippingCostsInput!]): ShippingCost
   }
 `
 

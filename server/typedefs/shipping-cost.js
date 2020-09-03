@@ -6,4 +6,8 @@ module.exports = gql`
     sea: Float!
     in_stock: [String!]!
   }
+  input GetShippingCostsInput {
+    asin: String!
+    quantity: Int!
+  }
 `
