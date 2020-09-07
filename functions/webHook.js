@@ -45,6 +45,8 @@ module.exports = async (req, res) => {
       const index = algoliaClient.initIndex("products")
       const algoliaProducts = existingProducts.map(p => ({
         objectID: p.objectID,
+        asin: p.asin,
+        specifications: p.specifications,
         title: p.title,
         department: p.department,
         bestseller: p.bestseller,
@@ -58,6 +60,7 @@ module.exports = async (req, res) => {
         ratings_total: p.ratings_total,
         main_image: p.main_image,
         images: p.images,
+        images_count: p.images_count,
         feature_bullets: p.feature_bullets,
         frequently_bought_together: p.frequently_bought_together
       }))
@@ -74,8 +77,9 @@ module.exports = async (req, res) => {
 
       let inserts = []
       if (checkArray(newProducts)) {
-        const algoliaProducts = existingProducts.map(p => ({
-          objectID: p.objectID,
+        const algoliaProducts = newProducts.map(p => ({
+          asin: p.asin,
+          specifications: p.specifications,
           title: p.title,
           department: p.department,
           bestseller: p.bestseller,
@@ -89,6 +93,7 @@ module.exports = async (req, res) => {
           ratings_total: p.ratings_total,
           main_image: p.main_image,
           images: p.images,
+          images_count: p.images_count,
           feature_bullets: p.feature_bullets,
           frequently_bought_together: p.frequently_bought_together
         }))

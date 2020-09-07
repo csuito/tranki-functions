@@ -39,9 +39,6 @@ function getSpecs(product) {
 const getShippingCosts = combineResolvers(
   // isAuthenticated,
   async (_, { input }) => {
-
-
-
     let asins = input
       .map(a => a.asin)
 
@@ -70,6 +67,8 @@ const getShippingCosts = combineResolvers(
             { variants: { $elemMatch: { asin: { $in: asins } } } }
           ]
       })
+
+    let price_changed = false
 
     // Fetching products and stock estimations in database
     let [products, stocks] = await Promise.all([DBQuery(productsQuery), DBQuery(stockQuery)])
@@ -131,11 +130,19 @@ const getShippingCosts = combineResolvers(
 
     // Checking fresh estimations and saving or updating in the DB
     let newStock = []
+    let updatePrice = []
     for (estimation of allEstimations) {
       if (estimation.in_stock) {
         in_stock.push(estimation.asin)
       }
       const existingRegistry = stocks.find(s => s.asin === estimation.asin)
+      const existingProduct = products.find(p => p.asin === estimation.asin)
+      const productPrice = existingProduct.buybox_winner.price
+      const stockPrice = estimation.price
+      if (productPrice.value !== stockPrice.value) {
+        price_changed = true
+        updatePrice.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
+      }
       if (existingRegistry) {
         newStock.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, estimation)))
       } else {
@@ -144,7 +151,7 @@ const getShippingCosts = combineResolvers(
     }
 
     if (newStock.length > 0) {
-      await Promise.all(newStock)
+      await Promise.all(newStock.concat(updatePrice))
     }
 
     // Calculating shipping costs for all dynamic and static products that are in stock
@@ -178,7 +185,7 @@ const getShippingCosts = combineResolvers(
           ft3Vol = dimensions / 1728
           lb3Vol = dimensions / 166
 
-          if (ft3Vol && ft3Vol > minVol) {
+          if (ft3Vol && ft3Vol < minVol) {
             ft3Vol = minVol
           }
         }
@@ -235,7 +242,8 @@ const getShippingCosts = combineResolvers(
     return {
       air: finalAirCost < 15 ? 15 : finalAirCost,
       sea: finalSeaCost < 10 ? 10 : finalSeaCost,
-      in_stock
+      in_stock,
+      price_changed
     }
 
   })
