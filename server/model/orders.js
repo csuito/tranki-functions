@@ -2,7 +2,7 @@ const { model, Schema } = require("mongoose")
 const { addressSchema, venezuelanAddressSchema } = require("./address")
 
 const product = {
-  id: { type: String, required: true },
+  asin: { type: String, required: true },
   supplier: {
     name: { type: String },
     orderID: { type: String }
