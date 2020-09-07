@@ -9,6 +9,7 @@ module.exports = {
     users,
     activeUsers,
     userExists,
+    shipping: require('./shipping-cost'),
     product: require("./product"),
     products: require("./products"),
     categories: require("./categories"),

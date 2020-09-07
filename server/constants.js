@@ -1,4 +1,5 @@
 module.exports = {
+  flatFeeDepartments: ["Ropa y Calzado"],
   requestTypes: {
     PRODUCT: "product",
     SEARCH: "search",
@@ -7,7 +8,6 @@ module.exports = {
     BESTSELLERS: "bestsellers",
     CATEGORY: "category"
   },
-
   sortOptions: {
     products: {
       MOST_RECENT: "most_recent",

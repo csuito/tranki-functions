@@ -1,5 +1,6 @@
 const { client } = require("../../client")
 const { requestTypes } = require("../../server/constants")
+const AllSettled = require('promise.allsettled')
 
 const isEmpty = (obj) => Object.keys(obj).length === 0 && obj.constructor === Object
 
@@ -21,20 +22,57 @@ const getDownloadLinks = pages => pages.map(page => {
  * @param {array} results
  * @returns {array}
  */
-const getPrimeProductCodes = results => results.
-  map(({ data: [page] }) => {
-    switch (page.request.type) {
+
+const getPrimeProductCodes = results => results
+  .reduce((prev, curr) => prev.concat(curr.data), [])
+  .map(data => data.result)
+  .reduce((prev, curr) => {
+    switch (curr.request_parameters.type) {
       case requestTypes.CATEGORY:
-        return page.result.category_results
+        return prev.concat(curr.category_results)
       case requestTypes.BESTSELLERS:
-        return page.result.bestsellers
+        return prev.concat(curr.bestsellers)
       case requestTypes.SEARCH:
-        return page.result.search_results
+        return prev.concat(curr.search_results)
     }
-  }).
-  reduce((a, b) => a.concat(b), []).
-  filter(product => containsRequiredProperties(product)).
-  map(product => product.asin)
+  }, [])
+  .filter(product => containsRequiredProperties(product))
+  .map(product => product.asin)
+
+/**
+ * Splits array into N parts
+ * @param {*} arr 
+ * @param {*} n 
+ */
+function splitUp(arr, n) {
+  var rest = arr.length % n,
+    restUsed = rest,
+    partLength = Math.floor(arr.length / n),
+    result = []
+
+  for (var i = 0; i < arr.length; i += partLength) {
+    let end = partLength + i, add = false
+    if (rest !== 0 && restUsed) {
+      end++
+      restUsed--
+      add = true
+    }
+    result.push(arr.slice(i, end))
+    if (add) {
+      i++
+    }
+  }
+  return result
+}
+
+/**
+ * Sets timeout for n milliseconds
+ * @param {Number} ms 
+ */
+function waitFor(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 
 /**
  * Retrieves product details from rainforest API and filters out non prime products
@@ -52,17 +90,26 @@ const getProductDetails = async (products, query = {}) => {
   }))
   const { bestseller = false, department = "", category = "", offer = false } = query
   try {
-    let productDetails = await Promise.all(getProducts)
 
-    /** 
-     * The commented code will allow us to fetch variants details, 
-     * instead of using the short object that comes with the parent object 
-     ***/
+    // Batching and throttling requests
+
+    let productDetails = []
+    const batches = splitUp(getProducts, 10)
+
+    for (let batch of batches) {
+      const newProducts = await AllSettled(batch)
+      productDetails = [...productDetails, ...newProducts]
+      await waitFor(2000)
+    }
+
+    productDetails = productDetails
+      .filter(p => p.status === "fulfilled")
+      .map(p => p.value)
+
 
     const productVariants = productDetails
       .map(p => {
         const { product } = p.data
-        console.log(product.variants)
         return product
           && product.variants
           && product.variants.length > 0
@@ -77,14 +124,23 @@ const getProductDetails = async (products, query = {}) => {
       .reduce((p, c) => p.concat(c.variants), [])
       .map(v => v.asin)
       .map(asin => {
-        // console.log({ asin })
         return client.get("/request", {
           params: { type: requestTypes.PRODUCT, asin },
           timeout: 350000
         })
       })
 
-    const allVariants = await Promise.all(_allVariants)
+    let allVariants = []
+    const variantBatches = splitUp(_allVariants, 10)
+    for (let batch of variantBatches) {
+      const newVariants = await AllSettled(batch)
+      allVariants = [...allVariants, ...newVariants]
+      await waitFor(2000)
+    }
+
+    allVariants = allVariants
+      .filter(v => v.status === "fulfilled")
+      .map(v => v.value)
 
     productDetails = productDetails
       .map(p => {
@@ -101,9 +157,11 @@ const getProductDetails = async (products, query = {}) => {
                 const link = v.link
                 const price = variant.price || variant.buybox_winner ? variant.buybox_winner.price : false
                 const attributes = variant.attributes && variant.attributes.length > 0 ? variant.attributes : false
+                const specifications = variant.specifications && variant.specifications.length > 0 ? variant.specifications : false
                 const images = variant.images && variant.images.length > 0 ? variant.images : false
-                return !isEmpty(variant) && price && images && attributes ? ({
+                return !isEmpty(variant) && price && images && attributes && specifications ? ({
                   title, link, price: variant.price || variant.buybox_winner.price,
+                  specifications,
                   // dimensions: { name: "size", value: variant.dimensions },
                   asin: variant.asin, image: variant.image, images: variant.images, attributes: variant.attributes
                 }) : false
@@ -115,7 +173,6 @@ const getProductDetails = async (products, query = {}) => {
         const result = {
           ...p, data: { ...p.data, product: { ...product, variants: pVariants } }
         }
-        // console.log(result.data.product)
         return result
 
 
@@ -132,7 +189,6 @@ const getProductDetails = async (products, query = {}) => {
         bestseller,
         offer
       }))
-
     return allProducts
   } catch (err) {
     console.log(err)
