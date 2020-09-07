@@ -62,6 +62,7 @@ module.exports = async (req, res) => {
         images: p.images,
         images_count: p.images_count,
         feature_bullets: p.feature_bullets,
+        has_variants: p.variants && p.variants.length > 0,
         frequently_bought_together: p.frequently_bought_together
       }))
       let updates = []
@@ -94,6 +95,7 @@ module.exports = async (req, res) => {
           main_image: p.main_image,
           images: p.images,
           images_count: p.images_count,
+          has_variants: p.variants && p.variants.length > 0,
           feature_bullets: p.feature_bullets,
           frequently_bought_together: p.frequently_bought_together
         }))
