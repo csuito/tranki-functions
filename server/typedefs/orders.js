@@ -21,32 +21,41 @@ module.exports = gql`
 
   interface BaseAddress {
     _id: ID
+    firstName: String
+    lastName: String
     streetType: String
     street: String
     houseOrAptNumber: String
     city: String
     country: String
     location: Location
+    additionalInfo: String
   }
 
   type GenericAddress implements BaseAddress {
     _id: ID
+    firstName: String
+    lastName: String
     streetType: String
     street: String
     houseOrAptNumber: String
     city: String
     country: String
     location: Location
+    additionalInfo: String
   }
 
   type VenezuelanAddress implements BaseAddress {
     _id: ID
+    firstName: String
+    lastName: String
     streetType: String
     street: String
     houseOrAptNumber: String
     city: String
     country: String
     location: Location
+    additionalInfo: String
     residence: String
     urbanization: String
     municipality: String

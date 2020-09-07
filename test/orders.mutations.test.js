@@ -85,6 +85,8 @@ describe("test graphql ORDERS mutations", () => {
     ],
     shipping: {
       address: {
+        firstName: "Juan",
+        lastName: "Perez",
         streetType: "Avenida",
         street: "Sur 8",
         residence: "Loma Linda",

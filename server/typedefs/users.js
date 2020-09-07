@@ -36,6 +36,8 @@ module.exports = gql`
 
   input AddressInput {
     firebaseID: ID
+    firstName: String!
+    lastName: String!
     streetType: String!
     street: String!
     houseOrAptNumber: String!
@@ -51,6 +53,8 @@ module.exports = gql`
   input UpdateAddressInput {
     firebaseID: ID!
     addressID: ID!
+    firstName: String
+    lastName: String
     streetType: String
     street: String
     houseOrAptNumber: String
