@@ -19,10 +19,13 @@ describe("test graphql ORDERS queries", () => {
         }
         userID
         email
-        amazonOrderID
         total {
           cost
           price
+        }
+        payment {
+          txID
+          method
         }
         shipping {
           address {
@@ -53,7 +56,7 @@ describe("test graphql ORDERS queries", () => {
             price
           }
         method
-        volume
+        dimensions
         weight
         eta
         }
@@ -74,10 +77,13 @@ describe("test graphql ORDERS queries", () => {
         }
         userID
         email
-        amazonOrderID
         total {
           cost
           price
+        }
+        payment {
+          txID
+          method
         }
         shipping {
           address {
@@ -108,7 +114,7 @@ describe("test graphql ORDERS queries", () => {
             price
           }
           method
-          volume
+          dimensions
           weight
           eta
         }
@@ -118,30 +124,49 @@ describe("test graphql ORDERS queries", () => {
 
   const testOrder = {
     _id: "12345",
-    userID: "12345",
-    email: "user@tranki.app",
-    phoneNumber: "04140000000",
-    amazonOrderID: "12345",
     cart: [
       {
         asin: "12345",
         price: 55.50,
         qty: 2,
         variant: "red",
+        supplier: {
+          name: "Amazon"
+        },
         link: "https://wwww.amazon.com/product-link?asin=B06XWZWYVP&variant=red"
       }
     ],
+    userID: "12345",
+    firstName: "Test",
+    lastName: "User",
+    email: "test.user@tranki.app",
+    phoneNumber: "04140000000",
+    total: {
+      price: 100.25
+    },
+    payment: {
+      txID: "12345",
+      method: "credit card"
+    },
     shipping: {
       address: {
-        streetType: "Avenida",
+        firstName: "Juan",
+        lastName: "Perez",
         street: "Sur 8",
+        streetType: "Avenida",
         houseOrAptNumber: "Piso-5, Torre B",
-        city: "Bogotá",
-        country: "COL"
+        country: "Venezuela",
+        city: "Caracas",
+        state: "Distrito Capital",
+        postCode: "1003",
+        residence: "Loma Linda",
+        urbanization: "La Lagunita",
+        municipality: "El Hatillo",
+        additionalInfo: "Dejar paquete en vigilancia"
       },
-      courier: "Courier X",
-      method: "maritime",
-      volume: "1 cubic feet",
+      courier: "Tiger Shipping",
+      method: "sea",
+      dimensions: "1 cubic feet",
       weight: "2 kilograms",
     },
   }
@@ -180,10 +205,9 @@ describe("test graphql ORDERS queries", () => {
     const { data: { orders: [result] } } = tester.mock({ query: ordersQuery, fixture })
     expect(result._id).to.be.a("string").to.equal(testOrder._id)
     expect(result.userID).to.be.a("string").to.equal(testOrder.userID)
-    expect(result.amazonOrderID).to.be.a("string").to.equal(testOrder.amazonOrderID)
   })
 
-  it("should return correct shipping address __typename on orders query (GenericAddress)", () => {
+  it("should return correct shipping address __typename on orders query (VenezuelanAddress)", () => {
     const fixture = {
       data: {
         orders: [{ ...testOrder }]
@@ -192,7 +216,7 @@ describe("test graphql ORDERS queries", () => {
 
     const { data: { orders: [result] } } = tester.mock({ query: ordersQuery, fixture })
     const address = result.shipping.address
-    expect(address.__typename).to.be.a("string").to.equal("GenericAddress")
+    expect(address.__typename).to.be.a("string").to.equal("VenezuelanAddress")
   })
 
   it("should fail on invalid order query", () => {
@@ -224,10 +248,9 @@ describe("test graphql ORDERS queries", () => {
     const { data: { order } } = tester.mock({ query: orderQuery, fixture, variables: { _id: "12345" } })
     expect(order._id).to.be.a("string").to.equal(testOrder._id)
     expect(order.userID).to.be.a("string").to.equal(testOrder.userID)
-    expect(order.amazonOrderID).to.be.a("string").to.equal(testOrder.amazonOrderID)
   })
 
-  it("should return correct shipping address __typename on order query (GenericAddress)", () => {
+  it("should return correct shipping address __typename on order query (VenezuelanAddress)", () => {
     const fixture = {
       data: {
         order: { ...testOrder }
@@ -235,6 +258,6 @@ describe("test graphql ORDERS queries", () => {
     }
 
     const { data: { order: { shipping: { address } } } } = tester.mock({ query: orderQuery, fixture, variables: { _id: "12345" } })
-    expect(address.__typename).to.be.a("string").to.equal("GenericAddress")
+    expect(address.__typename).to.be.a("string").to.equal("VenezuelanAddress")
   })
 })

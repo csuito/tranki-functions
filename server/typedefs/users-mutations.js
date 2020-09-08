@@ -5,8 +5,14 @@ module.exports = gql`
     asin: ID!
     price: Float!
     qty: Int!
-    variant: String
     link: String!
+    variant: String
+    supplier: SupplierInput
+  }
+
+  input SupplierInput {
+    name: String!
+    supplierOrderID: String
   }
 
   input TotalInput {
@@ -14,30 +20,23 @@ module.exports = gql`
     price: Float
   }
 
-  input LocationInput {
-    lat: String
-    lon: String
-  }
-
   input AddressInput {
-    firebaseID: ID
     firstName: String!
     lastName: String!
     streetType: String!
     street: String!
     houseOrAptNumber: String!
     city: String!
+    state: String!
     country: String!
-    location: LocationInput
-    additionalInfo: String
+    postCode: String
     residence: String
     urbanization: String
     municipality: String
-    pointOfReference: String
+    additionalInfo: String
   }
 
   input UpdateAddressInput {
-    firebaseID: ID!
     addressID: ID!
     firstName: String
     lastName: String
@@ -45,25 +44,24 @@ module.exports = gql`
     street: String
     houseOrAptNumber: String
     city: String
-    country: String!
-    location: LocationInput
-    additionalInfo: String
+    state: String
+    country: String
+    postCode: String
     residence: String
     urbanization: String
     municipality: String
-    pointOfReference: String
+    additionalInfo: String
   }
 
   input ShippingDataInput {
     address: AddressInput
     courier: String!
     method: String!
-    volume: String!
-    weight: String!
+    weight: String
+    dimensions: String
     total: TotalInput
     eta: String
   }
-
 
   input CreateUserInput {
     firebaseID: ID!
@@ -81,12 +79,11 @@ module.exports = gql`
   }
 
   input AddUserProductInput {
-    firebaseID: ID!
-    asin: String!
-    title: String!
-    image: String!
-    price: String!
+    asin: ID!
+    price: Float!
+    qty: Int!
     link: String!
+    supplier: SupplierInput
   }
 
   input ChangeUserStatusInput {

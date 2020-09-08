@@ -73,5 +73,4 @@ describe("test graphql DEPARTMENTS queries", () => {
       expect(p.image).to.be.a("string").and.be.equal(og.image)
     })
   })
-
 })

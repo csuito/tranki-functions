@@ -7,6 +7,7 @@ module.exports = gql`
     in_stock: [String!]!
     price_changed: Boolean!
   }
+  
   input GetShippingCostsInput {
     asin: String!
     quantity: Int!
