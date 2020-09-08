@@ -19,7 +19,6 @@ describe("test graphql ORDERS mutations", () => {
         }
         userID
         email
-        amazonOrderID
         total {
           cost
           price
@@ -51,7 +50,7 @@ describe("test graphql ORDERS mutations", () => {
             price
           }
           method
-          volume
+          dimensions
           weight
           eta
         }
@@ -70,35 +69,49 @@ describe("test graphql ORDERS mutations", () => {
   `
 
   const createOrderInput = {
-    userID: "12345",
-    email: "user@tranki.app",
-    phoneNumber: "04140000000",
-    amazonOrderID: "12345",
     cart: [
       {
         asin: "12345",
         price: 55.50,
         qty: 2,
         variant: "red",
+        supplier: {
+          name: "Amazon"
+        },
         link: "https://wwww.amazon.com/product-link?asin=B06XWZWYVP&variant=red"
       }
     ],
+    userID: "12345",
+    firstName: "Test",
+    lastName: "User",
+    email: "test.user@tranki.app",
+    phoneNumber: "04140000000",
+    total: {
+      price: 100.25
+    },
+    payment: {
+      txID: "12345",
+      method: "credit card"
+    },
     shipping: {
       address: {
         firstName: "Juan",
         lastName: "Perez",
-        streetType: "Avenida",
         street: "Sur 8",
-        residence: "Loma Linda",
+        streetType: "Avenida",
         houseOrAptNumber: "Piso-5, Torre B",
+        country: "Venezuela",
+        city: "Caracas",
+        state: "Distrito Capital",
+        postCode: "1003",
+        residence: "Loma Linda",
         urbanization: "La Lagunita",
         municipality: "El Hatillo",
-        city: "Caracas",
-        country: "Venezuela"
+        additionalInfo: "Dejar paquete en vigilancia"
       },
-      courier: "Courier X",
-      method: "maritime",
-      volume: "1 cubic feet",
+      courier: "Tiger Shipping",
+      method: "sea",
+      dimensions: "1 cubic feet",
       weight: "2 kilograms",
     },
   }
