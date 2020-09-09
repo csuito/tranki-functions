@@ -1,4 +1,6 @@
 module.exports = async (req, res) => {
+  console.log("Body: ", JSON.stringify(req.body))
+
   if (process.env.NODE_ENV === "local") {
     require("dotenv").config()
   }
@@ -12,11 +14,12 @@ module.exports = async (req, res) => {
   }
 
   try {
+
     if (!req.body.result_set || !req.body.result_set.download_links) {
       throw new Error("No downloadable links")
     }
 
-    const { getDownloadLinks, getPrimeProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray } = require("./helpers/hookHelpers")
+    const { getDownloadLinks, getPrimeProductCodes, getProductDetails, splitProductsByOpType, buildInsertOps, buildUpdateOps, checkArray, getShippingInfo, getSpec } = require("./helpers/hookHelpers")
 
     const { result_set: { download_links: { json: { pages } } } } = req.body
 
@@ -28,11 +31,21 @@ module.exports = async (req, res) => {
 
     console.log("Retrieved products - ready for preprocessing", `${results && results.length ? results.length : 0}`)
 
-    const productCodes = getPrimeProductCodes(results)
+    let productCodes = getPrimeProductCodes(results)
 
     console.log(`Results preprocessing done - ready to get ${productCodes && productCodes.length ? productCodes.length : 0} product details`)
 
-    const products = await getProductDetails(productCodes, req.query)
+    let products = await getProductDetails(productCodes, req.query)
+    products = products
+      .filter(p => {
+        const { weightSpec, dimensionSpec } = getSpec(p)
+        return weightSpec && dimensionSpec
+      })
+      .map(p => {
+        const { weightSpec, dimensionSpec } = getSpec(p)
+        const { ft3Vol, weight, lb3Vol } = getShippingInfo(weightSpec, dimensionSpec, 1)
+        return { ...p, ft3Vol, lb3Vol, weight }
+      })
 
     console.log(`Products: ${products && products.length > 0 ? products.length : 0}`)
 
@@ -63,7 +76,10 @@ module.exports = async (req, res) => {
         images_count: p.images_count,
         feature_bullets: p.feature_bullets,
         has_variants: p.variants && p.variants.length > 0,
-        frequently_bought_together: p.frequently_bought_together
+        frequently_bought_together: p.frequently_bought_together,
+        ft3Vol: p.ft3Vol,
+        lb3Vol: p.lb3Vol,
+        weight: p.weight
       }))
       let updates = []
       if (checkArray(existingProducts)) {
@@ -97,7 +113,10 @@ module.exports = async (req, res) => {
           images_count: p.images_count,
           has_variants: p.variants && p.variants.length > 0,
           feature_bullets: p.feature_bullets,
-          frequently_bought_together: p.frequently_bought_together
+          frequently_bought_together: p.frequently_bought_together,
+          ft3Vol: p.ft3Vol,
+          lb3Vol: p.lb3Vol,
+          weight: p.weight
         }))
         const { objectIDs } = await index.saveObjects(algoliaProducts, {
           autoGenerateObjectIDIfNotExist: true

@@ -1,5 +1,5 @@
 const { gql } = require("apollo-server-express")
-
+const inputs = require('./inputs')
 const productSchema = require("./product")
 const categorySchema = require("./category")
 const searchSchema = require("./search")
@@ -47,4 +47,4 @@ const mutations = gql`
   }
 `
 
-module.exports = [productSchema, categorySchema, searchSchema, stockSchema, reviewSchema, bestsellerSchema, departmentSchema, bannerSchema, userSchema, ordersSchema, shippingCostSchema, queries, mutations]
+module.exports = [inputs, productSchema, categorySchema, searchSchema, stockSchema, reviewSchema, bestsellerSchema, departmentSchema, bannerSchema, userSchema, ordersSchema, shippingCostSchema, queries, mutations]
