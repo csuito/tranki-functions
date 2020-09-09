@@ -103,8 +103,7 @@ const getShippingCosts = combineResolvers(
       .map(a => a.value.data.stock_estimation)
 
     // Checking fresh estimations and saving or updating in the DB
-    let newStock = []
-    let updatePrice = []
+    let dbOps = []
     for (estimation of allEstimations) {
       if (estimation.in_stock) {
         in_stock.push(estimation.asin)
@@ -115,17 +114,17 @@ const getShippingCosts = combineResolvers(
       const stockPrice = estimation.price
       if (productPrice.value !== stockPrice.value) {
         price_changed = true
-        updatePrice.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
+        dbOps.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
       }
       if (existingRegistry) {
-        newStock.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, estimation)))
+        dbOps.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, estimation)))
       } else {
-        newStock.push(DBQuery(Stock.create(estimation)))
+        dbOps.push(DBQuery(Stock.create(estimation)))
       }
     }
 
-    if (newStock.length > 0) {
-      await Promise.all(newStock.concat(updatePrice))
+    if (dbOps.length > 0) {
+      await Promise.all(dbOps)
     }
 
     // Calculating shipping costs for all dynamic and static products that are in stock
