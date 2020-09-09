@@ -50,7 +50,6 @@ const getShippingCosts = combineResolvers(
     // Adding asin not found in the stock table
     for (asin of asins) {
       const stock = stocks.find(s => s.asin === asin)
-      console.log({ stock })
       if (!stock) {
         check_stock.push(asin)
       }
@@ -132,7 +131,7 @@ const getShippingCosts = combineResolvers(
     products = products.filter(p => in_stock.includes(p.asin))
     const flatFeeProducts = products.filter(p => flatFeeDepartments.includes(p.department))
     const dynamicFeeProducts = products.filter(p => !flatFeeDepartments.includes(p.department))
-    let orderAirCost = 0, orderSeaCost = 0, minVol = 0.33, courierFtPrice = 14, courierLbPrice = 12, minWeight = 1, finalFt3Vol = 0, finalWeight = 0
+    let orderAirCost = 0, orderSeaCost = 0, orderDimensions = 0, orderWeight = 0, totalVolWeight = 0, minVol = 0.33, courierFtPrice = 14, courierLbPrice = 12, minWeight = 1, finalFt3Vol = 0, finalWeight = 0
 
     for (let i = 0; i < dynamicFeeProducts.length; i++) {
       const p = dynamicFeeProducts[i]
@@ -148,6 +147,9 @@ const getShippingCosts = combineResolvers(
       orderAirCost += airCost
       finalFt3Vol += ft3Vol
       finalWeight += weight
+      orderDimensions += totalLb3Vol
+      orderWeight += totalWeight
+      totalVolWeight += totalLb3Vol
     }
 
     for (let i = 0; i < flatFeeProducts.length; i++) {
@@ -166,7 +168,10 @@ const getShippingCosts = combineResolvers(
       in_stock,
       price_changed,
       seaCost: orderSeaCost,
-      airCost: orderAirCost
+      airCost: orderAirCost,
+      weight: orderWeight,
+      dimensions: orderDimensions,
+      volumetric_weight: totalVolWeight
     }
 
   })

@@ -8,5 +8,8 @@ module.exports = gql`
     price_changed: Boolean!
     airCost: Float!
     seaCost: Float!
+    dimensions: Float!
+    weight: Float!
+    volumetric_weight: Float!
   }
 `
