@@ -138,7 +138,12 @@ const getShippingCosts = combineResolvers(
       const p = dynamicFeeProducts[i]
       const { lb3Vol, ft3Vol, weight } = p
       const { quantity: qty } = input.find(i => i.asin === p.asin)
-      const { airCost, seaCost } = getCourierCosts({ lb3Vol: lb3Vol * qty, ft3Vol: ft3Vol * qty, weight: weight * qty, courierFtPrice, courierLbPrice })
+
+      const totalFt3Vol = ft3Vol * qty > minVol ? ft3Vol * qty : minVol
+      const totalWeight = weight * qty > minWeight ? weight * qty : minWeight
+      const totalLb3Vol = lb3Vol * qty
+
+      const { airCost, seaCost } = getCourierCosts({ lb3Vol: totalLb3Vol, ft3Vol: totalFt3Vol, weight: totalWeight, courierFtPrice, courierLbPrice })
       orderSeaCost += seaCost
       orderAirCost += airCost
       finalFt3Vol += ft3Vol
