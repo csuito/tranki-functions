@@ -50,6 +50,7 @@ const getShippingCosts = combineResolvers(
     // Adding asin not found in the stock table
     for (asin of asins) {
       const stock = stocks.find(s => s.asin === asin)
+      console.log({ stock })
       if (!stock) {
         check_stock.push(asin)
       }
@@ -117,7 +118,7 @@ const getShippingCosts = combineResolvers(
         dbOps.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
       }
       if (existingRegistry) {
-        dbOps.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, estimation)))
+        dbOps.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() })))
       } else {
         dbOps.push(DBQuery(Stock.create(estimation)))
       }
