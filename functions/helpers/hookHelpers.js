@@ -74,6 +74,104 @@ function waitFor(ms) {
 }
 
 
+const getSpec = (product) => {
+  if (!product || !product.specifications || product.specifications.length === 0) {
+    return { weightSpec: null, dimensionSpec: null }
+  }
+  let weightSpec = product.specifications
+    .map(s => ({ value: s.value, name: s.name.replace('\n', '') }))
+    .find(s => {
+      const name = s.name.toLowerCase().trim()
+      return (
+        name === "peso del envío" || name === "peso del producto"
+        || name === "product weight" || name === "package weight"
+      )
+    })
+  let dimensionSpec = product.specifications
+    .map(s => ({ value: s.value, name: s.name.replace('\n', '') }))
+    .find(s => {
+      const name = s.name.toLowerCase().trim()
+      return (
+        name === "dimensiones del paquete" || name === "dimensiones del producto"
+        || name === "product dimensions" || name === "package dimensions"
+      )
+    })
+  if (dimensionSpec) {
+    dimensionSpec = dimensionSpec.value.split(";")
+    if (!weightSpec && dimensionSpec && dimensionSpec.length === 2) {
+      weightSpec = { name: "peso del producto", value: dimensionSpec[1].trim() }
+    }
+  }
+  return { weightSpec, dimensionSpec }
+}
+
+const getShippingInfo = (weightSpec, dimensionSpec, qty, options = {}) => {
+  const { minVol = false, minWeight = false } = options
+  let weight, dimensions, dimensionUnit, weightUnit, ft3Vol, lb3Vol
+  if (dimensionSpec) {
+    dimensionSpec = dimensionSpec[0]
+    dimensionSpec = dimensionSpec.split(" ").filter(x => x)
+    dimensionUnit = dimensionSpec[dimensionSpec.length - 1]
+    const dimensionCalc = (dimensionSpec.reduce((prev, curr) => curr && !isNaN(curr) ? prev * curr : prev, 1) * qty)
+    // Cm to inches conversion
+    if (dimensionUnit === "cm") {
+      dimensions = dimensionCalc * 0.0610237
+    } else {
+      dimensions = dimensionCalc
+    }
+    ft3Vol = dimensions / 1728
+    lb3Vol = dimensions / 166
+
+    if (ft3Vol && minVol && ft3Vol < minVol) {
+      ft3Vol = minVol
+    }
+
+  }
+  if (weightSpec) {
+    weightSpec = weightSpec.value.split(" ")
+    weight = +weightSpec[0]
+    weightUnit = weightSpec[weightSpec.length - 1].toLowerCase().trim()
+    // Ounces to pound conversion
+    if (weightUnit === "onzas" || weightUnit === "ounces") {
+      weight = weight / 16
+    }
+
+    // Multiplying by quantity
+    weight *= qty
+
+    if (weight && minWeight && weight < minWeight) {
+      weight = minWeight
+    }
+    // Pounds to kg conversion
+    weight = weight * 0.453592
+  }
+  return {
+    weight, dimensions, dimensionUnit, weightUnit, ft3Vol, lb3Vol
+  }
+}
+
+const getCourierCosts = ({ lb3Vol, ft3Vol, weight, courierFtPrice, courierLbPrice }) => {
+  if (courierFtPrice && courierLbPrice) {
+    let ft3Price = courierFtPrice
+    let lbPrice = courierLbPrice
+    let flightVol = lb3Vol * lbPrice
+    let plainWeight = weight * lbPrice
+    let maxFlight = Math.max(flightVol, plainWeight)
+    return {
+      ft3Vol,
+      lb3Vol,
+      ft3Price,
+      weight,
+      flightVol,
+      ft3Price,
+      lbPrice,
+      plainWeight,
+      seaCost: (ft3Vol * ft3Price),
+      airCost: maxFlight
+    }
+  }
+}
+
 /**
  * Retrieves product details from rainforest API and filters out non prime products
  * @param {array} productCodes 
@@ -267,5 +365,8 @@ module.exports = {
   splitProductsByOpType,
   buildUpdateOps,
   buildInsertOps,
-  checkArray
+  checkArray,
+  getShippingInfo,
+  getSpec,
+  getCourierCosts
 }

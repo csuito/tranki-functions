@@ -124,6 +124,9 @@ const productSchema = new Schema({
   },
   also_viewed: [shortProduct],
   also_bought: [shortProduct],
+  ft3Vol: { type: Number, required: true },
+  lb3Vol: { type: Number, required: true },
+  weight: { type: Number, required: true },
   objectID: { type: String, required: true }
 })
 

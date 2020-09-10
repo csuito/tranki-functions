@@ -3,34 +3,8 @@ const { isAuthenticated } = require('./middleware/auth')
 const { flatFeeDepartments, requestTypes } = require('../constants')
 const { client } = require('../../client')
 const AllSettled = require('promise.allsettled')
+const { getSpec, getShippingInfo, getCourierCosts } = require('../../functions/helpers/hookHelpers')
 
-function getSpecs(product) {
-  let weightSpec = product.specifications
-    .map(s => ({ value: s.value, name: s.name.replace('\n', '') }))
-    .find(s => {
-      const name = s.name.toLowerCase().trim()
-      return (
-        name === "peso del envío" || name === "peso del producto"
-        || name === "product weight" || name === "package weight"
-      )
-    })
-  let dimensionSpec = product.specifications
-    .map(s => ({ value: s.value, name: s.name.replace('\n', '') }))
-    .find(s => {
-      const name = s.name.toLowerCase().trim()
-      return (
-        name === "dimensiones del paquete" || name === "dimensiones del producto"
-        || name === "product dimensions" || name === "package dimensions"
-      )
-    })
-  if (dimensionSpec) {
-    dimensionSpec = dimensionSpec.value.split(";")
-    if (!weightSpec && dimensionSpec && dimensionSpec.length === 2) {
-      weightSpec = { name: "peso del producto", value: dimensionSpec[1].trim() }
-    }
-  }
-  return { weightSpec, dimensionSpec }
-}
 
 /**
  * Returns review data for a single product
@@ -103,7 +77,7 @@ const getShippingCosts = combineResolvers(
         if (p.variants && p.variants.length > 0) {
           const variant = p.variants.find(v => asins.includes(v.asin))
           if (variant) {
-            const { weightSpec, dimensionSpec } = getSpecs(variant)
+            const { weightSpec, dimensionSpec } = getSpec(variant)
             if (dimensionSpec && weightSpec) {
               return variant
             }
@@ -129,8 +103,7 @@ const getShippingCosts = combineResolvers(
       .map(a => a.value.data.stock_estimation)
 
     // Checking fresh estimations and saving or updating in the DB
-    let newStock = []
-    let updatePrice = []
+    let dbOps = []
     for (estimation of allEstimations) {
       if (estimation.in_stock) {
         in_stock.push(estimation.asin)
@@ -141,109 +114,64 @@ const getShippingCosts = combineResolvers(
       const stockPrice = estimation.price
       if (productPrice.value !== stockPrice.value) {
         price_changed = true
-        updatePrice.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
+        dbOps.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
       }
       if (existingRegistry) {
-        newStock.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, estimation)))
+        dbOps.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() })))
       } else {
-        newStock.push(DBQuery(Stock.create(estimation)))
+        dbOps.push(DBQuery(Stock.create(estimation)))
       }
     }
 
-    if (newStock.length > 0) {
-      await Promise.all(newStock.concat(updatePrice))
+    if (dbOps.length > 0) {
+      await Promise.all(dbOps)
     }
 
     // Calculating shipping costs for all dynamic and static products that are in stock
     products = products.filter(p => in_stock.includes(p.asin))
     const flatFeeProducts = products.filter(p => flatFeeDepartments.includes(p.department))
     const dynamicFeeProducts = products.filter(p => !flatFeeDepartments.includes(p.department))
-    let airCost = 0, seaCost = 0, minVol = 0.33, courierFtPrice = 14, courierLbPrice = 12, minWeight = 1
-    for (let i = 0; i < dynamicFeeProducts.length; i++) {
+    let orderAirCost = 0, orderSeaCost = 0, orderDimensions = 0, orderWeight = 0, totalVolWeight = 0, minVol = 0.33, courierFtPrice = 14, courierLbPrice = 12, minWeight = 1, finalFt3Vol = 0, finalWeight = 0
 
+    for (let i = 0; i < dynamicFeeProducts.length; i++) {
       const p = dynamicFeeProducts[i]
+      const { lb3Vol, ft3Vol, weight } = p
       const { quantity: qty } = input.find(i => i.asin === p.asin)
 
-      let weight = false, dimensions = false,
-        dimensionUnit = false, weightUnit = false,
-        ft3Vol = false
+      const totalFt3Vol = ft3Vol * qty > minVol ? ft3Vol * qty : minVol
+      const totalWeight = weight * qty > minWeight ? weight * qty : minWeight
+      const totalLb3Vol = lb3Vol * qty
 
-      if (p.specifications && p.specifications.length > 0) {
-        let { weightSpec, dimensionSpec } = getSpecs(p)
-        if (dimensionSpec) {
-          dimensionSpec = dimensionSpec[0]
-          dimensionSpec = dimensionSpec.split(" ").filter(x => x)
-          dimensionUnit = dimensionSpec[dimensionSpec.length - 1]
-          const dimensionCalc = (dimensionSpec.reduce((prev, curr) => curr && !isNaN(curr) ? prev * curr : prev, 1) * qty)
-          // Cm to inches conversion
-          if (dimensionUnit === "cm") {
-            dimensions = dimensionCalc * 0.0610237
-          } else {
-            dimensions = dimensionCalc
-          }
-
-          ft3Vol = dimensions / 1728
-          lb3Vol = dimensions / 166
-
-          if (ft3Vol && ft3Vol < minVol) {
-            ft3Vol = minVol
-          }
-        }
-        if (weightSpec) {
-          weightSpec = weightSpec.value.split(" ")
-          weight = +weightSpec[0]
-          weightUnit = weightSpec[weightSpec.length - 1].toLowerCase().trim()
-          // Ounces to pound conversion
-          if (weightUnit === "onzas" || weightUnit === "ounces") {
-            weight = weight / 16
-          }
-
-          // Multiplying by quantity
-          weight *= qty
-
-          if (weight && weight < minWeight) {
-            weight = minWeight
-          }
-          // Pounds to kg conversion
-          weight = weight * 0.453592
-        }
-
-        let ft3Price = courierFtPrice
-        let lbPrice = courierLbPrice
-        let flightVol = lb3Vol * lbPrice
-        let plainWeight = weight * lbPrice
-        let maxFlight = Math.max(flightVol, plainWeight)
-
-        console.log({
-          ft3Vol,
-          lb3Vol,
-          ft3Price,
-          weight,
-          flightVol,
-          ft3Price,
-          lbPrice,
-          plainWeight,
-          maxFlight
-        })
-
-        seaCost += (ft3Vol * ft3Price)
-        airCost += maxFlight
-      }
+      const { airCost, seaCost } = getCourierCosts({ lb3Vol: totalLb3Vol, ft3Vol: totalFt3Vol, weight: totalWeight, courierFtPrice, courierLbPrice })
+      orderSeaCost += seaCost
+      orderAirCost += airCost
+      finalFt3Vol += ft3Vol
+      finalWeight += weight
+      orderDimensions += totalLb3Vol
+      orderWeight += totalWeight
+      totalVolWeight += totalLb3Vol
     }
 
     for (let i = 0; i < flatFeeProducts.length; i++) {
-      seaCost += 5
-      airCost += 5
+      orderSeaCost += 5
+      orderAirCost += 5
     }
 
-    const finalAirCost = airCost / 0.85
-    const finalSeaCost = seaCost / 0.85
+    const finalAirCost = orderAirCost / 0.85
+    const finalSeaCost = orderSeaCost / 0.85
 
     return {
-      air: finalAirCost < 15 ? 15 : finalAirCost,
-      sea: finalSeaCost < 10 ? 10 : finalSeaCost,
+      air: finalAirCost < 12 ? 15 : finalAirCost,
+      sea: finalSeaCost < 8 ? 10 : finalSeaCost,
+      ft3Vol: finalFt3Vol,
+      weight: finalWeight,
       in_stock,
-      price_changed
+      price_changed,
+      seaCost: orderSeaCost,
+      airCost: orderAirCost,
+      weight: orderWeight,
+      dimensions: orderDimensions,
+      volumetric_weight: totalVolWeight
     }
 
   })
