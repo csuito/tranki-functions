@@ -1,5 +1,6 @@
 const { gql } = require("apollo-server-express")
 const inputs = require('./inputs')
+const stripeSchema = require('./stripe')
 const productSchema = require("./product")
 const categorySchema = require("./category")
 const searchSchema = require("./search")
@@ -44,7 +45,8 @@ const mutations = gql`
     updateUserAddress(input: UpdateAddressInput!): User
     addUserProduct(input: AddUserProductInput!): Boolean
     changeUserStatus(input: ChangeUserStatusInput!): String
+    onBoardStripeUser(input: StripeOnBoardInput!): StripeCard
   }
 `
 
-module.exports = [inputs, productSchema, categorySchema, searchSchema, stockSchema, reviewSchema, bestsellerSchema, departmentSchema, bannerSchema, userSchema, ordersSchema, shippingCostSchema, queries, mutations]
+module.exports = [inputs, productSchema, categorySchema, searchSchema, stockSchema, reviewSchema, bestsellerSchema, departmentSchema, bannerSchema, userSchema, ordersSchema, shippingCostSchema, stripeSchema, queries, mutations]

@@ -28,6 +28,7 @@
     "graphql-resolvers": "^0.4.2",
     "mongoose": "^5.9.22",
     "promise.allsettled": "^1.0.2",
+    "stripe": "^8.94.0",
     "uuid-apikey": "^1.4.6"
   },
   "devDependencies": {

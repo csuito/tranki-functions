@@ -19,7 +19,16 @@ const userSchema = new Schema({
   viewedProducts: [productSchema],
   status: { type: String, required: true, default: "active" },
   lastLogin: { type: String, required: true, default: Date.now },
-  creationDate: { type: String, required: true, default: Date.now }
+  creationDate: { type: String, required: true, default: Date.now },
+  stripe: {
+    id: { type: String },
+    cards: [{
+      last4: { type: String },
+      type: { type: String },
+      id: { type: String },
+      token: { type: String }
+    }]
+  }
 })
 
 userSchema.path("shippingAddresses").discriminator("VEN", venezuelanAddressSchema)

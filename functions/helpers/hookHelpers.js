@@ -113,12 +113,14 @@ const getShippingInfo = (weightSpec, dimensionSpec, qty, options = {}) => {
     dimensionSpec = dimensionSpec.split(" ").filter(x => x)
     dimensionUnit = dimensionSpec[dimensionSpec.length - 1]
     const dimensionCalc = (dimensionSpec.reduce((prev, curr) => curr && !isNaN(curr) ? prev * curr : prev, 1) * qty)
+
     // Cm to inches conversion
     if (dimensionUnit === "cm") {
       dimensions = dimensionCalc * 0.0610237
     } else {
       dimensions = dimensionCalc
     }
+
     ft3Vol = dimensions / 1728
     lb3Vol = dimensions / 166
 
@@ -142,8 +144,6 @@ const getShippingInfo = (weightSpec, dimensionSpec, qty, options = {}) => {
     if (weight && minWeight && weight < minWeight) {
       weight = minWeight
     }
-    // Pounds to kg conversion
-    weight = weight * 0.453592
   }
   return {
     weight, dimensions, dimensionUnit, weightUnit, ft3Vol, lb3Vol

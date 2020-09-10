@@ -1,6 +1,13 @@
 const { gql } = require("apollo-server-express")
 
 module.exports = gql`
+
+  input StripeOnBoardInput {
+    card_token: String!
+    email: String!
+    firebaseID: String!
+  }
+
   input SupplierInput {
     name: String!
     supplierOrderID: String
@@ -37,8 +44,8 @@ module.exports = gql`
   }
 
   input PaymentInput {
-    txID: String!
-    method: String!
+    amount: Float!
+    card: String!
   }
 
   input ShippingDataInput {

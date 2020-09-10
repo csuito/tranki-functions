@@ -59,7 +59,7 @@ const getShippingCosts = combineResolvers(
     for (let stock of stocks) {
       let diff = numDaysBetween(today, stock.lastChecked)
       if (diff < 2) {
-        if (stock.in_stock) {
+        if (stock && stock.in_stock) {
           in_stock.push(stock.asin)
         }
       }
@@ -99,7 +99,7 @@ const getShippingCosts = combineResolvers(
 
 
     allEstimations = allEstimations
-      .filter(a => a.status === "fulfilled")
+      .filter(a => a.status === "fulfilled" && a.value.data.stock_estimation)
       .map(a => a.value.data.stock_estimation)
 
     // Checking fresh estimations and saving or updating in the DB
@@ -112,6 +112,7 @@ const getShippingCosts = combineResolvers(
       const existingProduct = products.find(p => p.asin === estimation.asin)
       const productPrice = existingProduct.buybox_winner.price
       const stockPrice = estimation.price
+
       if (productPrice.value !== stockPrice.value) {
         price_changed = true
         dbOps.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
@@ -131,47 +132,56 @@ const getShippingCosts = combineResolvers(
     products = products.filter(p => in_stock.includes(p.asin))
     const flatFeeProducts = products.filter(p => flatFeeDepartments.includes(p.department))
     const dynamicFeeProducts = products.filter(p => !flatFeeDepartments.includes(p.department))
-    let orderAirCost = 0, orderSeaCost = 0, orderDimensions = 0, orderWeight = 0, totalVolWeight = 0, minVol = 0.33, courierFtPrice = 14, courierLbPrice = 12, minWeight = 1, finalFt3Vol = 0, finalWeight = 0
+    let orderDimensions = 0, orderWeight = 0, orderVolWeight = 0,
+      minVol = 0.33, courierFtPrice = 15,
+      courierLbPrice = 5.5, minWeight = 1
 
     for (let i = 0; i < dynamicFeeProducts.length; i++) {
+
       const p = dynamicFeeProducts[i]
       const { lb3Vol, ft3Vol, weight } = p
       const { quantity: qty } = input.find(i => i.asin === p.asin)
 
-      const totalFt3Vol = ft3Vol * qty > minVol ? ft3Vol * qty : minVol
-      const totalWeight = weight * qty > minWeight ? weight * qty : minWeight
-      const totalLb3Vol = lb3Vol * qty
+      const productFt3Vol = ft3Vol * qty
+      const productWeight = weight * qty
+      const productLb3Vol = lb3Vol * qty
 
-      const { airCost, seaCost } = getCourierCosts({ lb3Vol: totalLb3Vol, ft3Vol: totalFt3Vol, weight: totalWeight, courierFtPrice, courierLbPrice })
-      orderSeaCost += seaCost
-      orderAirCost += airCost
-      finalFt3Vol += ft3Vol
-      finalWeight += weight
-      orderDimensions += totalLb3Vol
-      orderWeight += totalWeight
-      totalVolWeight += totalLb3Vol
+      orderDimensions += productFt3Vol
+      orderWeight += productWeight
+      orderVolWeight += productLb3Vol
     }
+
+    orderDimensions = orderDimensions > minVol ? orderDimensions : minVol
+    orderWeight = orderWeight > minWeight ? orderWeight : minWeight
+
+    let { airCost, seaCost } = getCourierCosts({
+      lb3Vol: orderVolWeight, ft3Vol: orderDimensions,
+      weight: orderWeight, courierFtPrice, courierLbPrice
+    })
 
     for (let i = 0; i < flatFeeProducts.length; i++) {
-      orderSeaCost += 5
-      orderAirCost += 5
+      airCost += 5
+      seaCost += 5
     }
 
-    const finalAirCost = orderAirCost / 0.85
-    const finalSeaCost = orderSeaCost / 0.85
+    let markup
+    if (airCost < 100) markup = 0.85
+    if (airCost > 100 && airCost < 999) markup = 0.90
+    if (airCost > 1000) markup = 0.95
+
+    const finalAirPrice = airCost / markup
+    const finalSeaPrice = seaCost / markup
 
     return {
-      air: finalAirCost < 12 ? 15 : finalAirCost,
-      sea: finalSeaCost < 8 ? 10 : finalSeaCost,
-      ft3Vol: finalFt3Vol,
-      weight: finalWeight,
+      air: finalAirPrice < 15 ? 15 : finalAirPrice,
+      sea: finalSeaPrice < 10 ? 10 : finalSeaPrice,
       in_stock,
       price_changed,
-      seaCost: orderSeaCost,
-      airCost: orderAirCost,
+      seaCost,
+      airCost,
       weight: orderWeight,
       dimensions: orderDimensions,
-      volumetric_weight: totalVolWeight
+      volumetric_weight: orderVolWeight
     }
 
   })

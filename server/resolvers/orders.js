@@ -44,8 +44,20 @@ module.exports = {
     async (_, { input }) => {
       const Order = require("../model/orders")
       try {
-        const query = Order.create(input)
-        return await DBQuery(query)
+        const { payment: { card }, userID, total: { price } } = input
+        const stripe = require('stripe')(process.env.STRIPE_KEY)
+        const charge = await stripe.charges.create({
+          amount: price,
+          currency: 'usd',
+          source: card,
+          description: userID
+        })
+        if (charge && charge.id) {
+          input = { ...input, payment: { txID: charge.id, method: 'Stripe' } }
+          const query = Order.create(input)
+          return await DBQuery(query)
+        }
+        return new Error('Unable to process payment')
       } catch (e) {
         return e
       }

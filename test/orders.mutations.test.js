@@ -90,8 +90,8 @@ describe("test graphql ORDERS mutations", () => {
       price: 100.25
     },
     payment: {
-      txID: "12345",
-      method: "credit card"
+      card: "card_1HPkmBK9woMnl4elgvOkQnUt",
+      amount: 100.25
     },
     shipping: {
       address: {
