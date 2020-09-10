@@ -1,5 +1,6 @@
 const { orders, order, createOrder, updateOrder, userOrders } = require("./orders")
 const { createUser, updateUser, addUserAddress, updateUserAddress, addUserProduct, user, users, activeUsers, changeUserStatus, userExists } = require("./users")
+const { onBoardStripeUser } = require('./stripe')
 module.exports = {
   Query: {
     orders,
@@ -29,6 +30,7 @@ module.exports = {
     updateUserAddress,
     addUserProduct,
     changeUserStatus,
+    onBoardStripeUser
   },
   Address: {
     __resolveType(data, ctx, info) {

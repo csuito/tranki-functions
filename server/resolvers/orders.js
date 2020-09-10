@@ -44,12 +44,13 @@ module.exports = {
     async (_, { input }) => {
       const Order = require("../model/orders")
       try {
-        const { payment: { card }, userID, total: { price } } = input
-        const stripe = require('stripe')(process.env.STRIPE_KEY)
+        const { payment: { card, customer }, userID, total: { price } } = input
+        const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
         const charge = await stripe.charges.create({
-          amount: price,
+          amount: parseInt((price * 100).toFixed(0), 10),
           currency: 'usd',
           source: card,
+          customer,
           description: userID
         })
         if (charge && charge.id) {

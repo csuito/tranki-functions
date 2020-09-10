@@ -44,8 +44,8 @@ module.exports = gql`
   }
 
   input PaymentInput {
-    amount: Float!
     card: String!
+    customer: String!
   }
 
   input ShippingDataInput {
