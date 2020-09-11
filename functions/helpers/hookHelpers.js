@@ -189,15 +189,19 @@ const getProductDetails = async (products, query = {}) => {
   const { bestseller = false, department = "", category = "", offer = false } = query
   try {
 
-    // Batching and throttling requests
+
 
     let productDetails = []
-    const batches = splitUp(getProducts, 10)
-
-    for (let batch of batches) {
-      const newProducts = await AllSettled(batch)
-      productDetails = [...productDetails, ...newProducts]
-      await waitFor(2000)
+    // Batching and throttling requests if there are more than 100 products
+    if (getProducts.length > 100) {
+      const batches = splitUp(getProducts, 10)
+      for (let batch of batches) {
+        const newProducts = await AllSettled(batch)
+        productDetails = [...productDetails, ...newProducts]
+        await waitFor(2000)
+      }
+    } else {
+      productDetails = await AllSettled(getProducts)
     }
 
     productDetails = productDetails
@@ -229,12 +233,18 @@ const getProductDetails = async (products, query = {}) => {
       })
 
     let allVariants = []
-    const variantBatches = splitUp(_allVariants, 10)
-    for (let batch of variantBatches) {
-      const newVariants = await AllSettled(batch)
-      allVariants = [...allVariants, ...newVariants]
-      await waitFor(2000)
+    // Batching and throttling requests if there are more than 100 variants
+    if (_allVariants.length > 100) {
+      const variantBatches = splitUp(_allVariants, 10)
+      for (let batch of variantBatches) {
+        const newVariants = await AllSettled(batch)
+        allVariants = [...allVariants, ...newVariants]
+        await waitFor(2000)
+      }
+    } else {
+      allVariants = await AllSettled(_allVariants)
     }
+
 
     allVariants = allVariants
       .filter(v => v.status === "fulfilled")
