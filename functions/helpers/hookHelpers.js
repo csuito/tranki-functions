@@ -194,7 +194,8 @@ const getProductDetails = async (products, query = {}) => {
     let productDetails = []
     // Batching and throttling requests if there are more than 100 products
     if (getProducts.length > 100) {
-      const batches = splitUp(getProducts, 10)
+      const numBatches = Math.ceil(getProducts.length / 250)
+      const batches = splitUp(getProducts, numBatches)
       for (let batch of batches) {
         const newProducts = await AllSettled(batch)
         productDetails = [...productDetails, ...newProducts]
@@ -235,7 +236,8 @@ const getProductDetails = async (products, query = {}) => {
     let allVariants = []
     // Batching and throttling requests if there are more than 100 variants
     if (_allVariants.length > 100) {
-      const variantBatches = splitUp(_allVariants, 10)
+      const numBatches = Math.ceil(_allVariants.length / 250)
+      const variantBatches = splitUp(_allVariants, numBatches)
       for (let batch of variantBatches) {
         const newVariants = await AllSettled(batch)
         allVariants = [...allVariants, ...newVariants]
@@ -271,7 +273,7 @@ const getProductDetails = async (products, query = {}) => {
                   title, link, price: variant.price || variant.buybox_winner.price,
                   specifications,
                   // dimensions: { name: "size", value: variant.dimensions },
-                  asin: variant.asin, image: variant.image, images: variant.images, attributes: variant.attributes
+                  asin: variant.asin, productID: variant.asin, image: variant.image, images: variant.images, attributes: variant.attributes
                 }) : false
               }
               return false
@@ -313,13 +315,9 @@ const splitProductsByOpType = async products => {
   const Product = require("../../server/model/products")
   try {
     const productCodes = products.map(({ asin }) => asin)
-
-    const existingProducts = await Product.find({ "asin": { $in: productCodes } }).lean()
-
-    const existingProductCodes = existingProducts.map(({ asin }) => asin)
-
+    const existingProducts = await Product.find({ "productID": { $in: productCodes } }).lean()
+    const existingProductCodes = existingProducts.map(({ productID }) => productID)
     const newProducts = products.filter(({ asin }) => !existingProductCodes.includes(asin))
-
     return { existingProducts, newProducts }
   } catch (err) {
     throw new Error("Unable to retrieve existing products from DB")
@@ -331,13 +329,16 @@ const splitProductsByOpType = async products => {
  * @param {array} products
  * @returns {array}
  */
-const buildUpdateOps = products => checkArray(products) ? products.map(product => ({
-  updateOne: {
-    filter: { asin: product.asin },
-    update: { ...product },
-    upsert: true
+const buildUpdateOps = products => checkArray(products) ? products.map(product => {
+  return {
+    updateOne: {
+      filter: { productID: product.productID },
+      update: { ...product },
+      upsert: true
+    }
   }
-})) : []
+
+}) : []
 
 /**
  * Builds products DB insert operations
