@@ -5,13 +5,15 @@ if (process.env.NODE_ENV === "local") {
 const app = require("express")()
 
 const { https: { onRequest } } = require("firebase-functions")
-
-const { ApolloServer, makeExecutableSchema } = require("apollo-server-express")
+const { ApolloServer } = require("apollo-server-express")
+const { makeExecutableSchema } = require('graphql-tools')
+const { constraintDirective, constraintDirectiveTypeDefs } = require('graphql-constraint-directive')
 const typeDefs = require("../server/typedefs")
 const resolvers = require("../server/resolvers")
 
 const schema = makeExecutableSchema({
-  typeDefs,
+  typeDefs: [constraintDirectiveTypeDefs, typeDefs],
+  schemaTransforms: [constraintDirective()],
   resolvers,
   resolverValidationOptions: { requireResolversForResolveType: false },
 })

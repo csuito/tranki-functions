@@ -1,12 +1,12 @@
 const GraphQLTester = require("easygraphql-tester")
-const { gql } = require("apollo-server-express")
 const { expect } = require("chai")
 
+const { constraintDirectiveTypeDefs } = require('graphql-constraint-directive')
 const typeDefs = require("../server/typedefs")
 const resolvers = require("../server/resolvers")
 
 describe("test graphql ORDERS mutations", () => {
-  const createOrderMutation = gql`
+  const createOrderMutation = `
     mutation createOrder($input: CreateOrderInput!) {
       createOrder(input: $input) {
         _id
@@ -59,7 +59,7 @@ describe("test graphql ORDERS mutations", () => {
     }
   `
 
-  const updateOrderMutation = gql`
+  const updateOrderMutation = `
     mutation updateOrder($input: UpdateOrderInput!) {
       updateOrder(input: $input) {
         _id
@@ -123,11 +123,11 @@ describe("test graphql ORDERS mutations", () => {
 
   let tester
   before(() => {
-    tester = new GraphQLTester(typeDefs, resolvers)
+    tester = new GraphQLTester(`${constraintDirectiveTypeDefs} ${typeDefs}`, resolvers)
   })
 
   it("should fail on invalid create order mutation", () => {
-    const invalidMutation = gql`
+    const invalidMutation = `
       mutation createOrder($input: CreateOrderInput!) {
         createOrder(input: $input) {
           cart {
@@ -167,7 +167,7 @@ describe("test graphql ORDERS mutations", () => {
   })
 
   it("should fail on invalid update order mutation", () => {
-    const invalidMutation = gql`
+    const invalidMutation = `
     mutation updateOrder($input: UpdateOrderInput!) {
       updateOrder(input: $input) {
         cart {

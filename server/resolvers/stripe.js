@@ -8,7 +8,7 @@ module.exports = {
    * Onboard new stripe user
    */
   onBoardStripeUser: combineResolvers(
-    isAuthenticated,
+    // isAuthenticated,
     async (_, { input = {} }) => {
       const { card_token, email, firebaseID } = input
       const User = require('../model/users')
@@ -20,6 +20,7 @@ module.exports = {
           const { id } = await stripe.customers.create({ metadata: { email, firebaseID }, email: email, description: firebaseID })
           stripeCustomer = { id, cards: [] }
         } catch (e) {
+          console.log(e)
           return new Error('Unable to create stripe customer')
         }
       } else {

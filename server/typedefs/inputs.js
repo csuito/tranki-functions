@@ -1,41 +1,38 @@
-const { gql } = require("apollo-server-express")
-
-module.exports = gql`
-
+module.exports = `
   input StripeOnBoardInput {
-    card_token: String!
-    email: String!
-    firebaseID: String!
+    card_token: String! @constraint(minLength: 5, maxLength: 100)
+    email: String! @constraint(minLength: 5, format: "email")
+    firebaseID: String! @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
   }
 
   input SupplierInput {
-    name: String!
-    supplierOrderID: String
+    name: String! @constraint(minLength: 5, maxLength: 100)
+    supplierOrderID: String @constraint(minLength: 5, maxLength: 100)
   }
 
   input ProductInput {
-    asin: ID!
+    productID: String! @constraint(minLength: 10, maxLength: 10, uniqueTypeName: "ID")
     price: Float!
-    qty: Int!
-    link: String!
-    variant: String
+    qty: Int! @constraint(min: 1)
+    link: String! @constraint(format: "uri")
+    variant: String 
     supplier: SupplierInput
   }
 
   input AddressInput {
-    firstName: String!
-    lastName: String!
-    streetType: String!
-    street: String!
-    houseOrAptNumber: String!
-    city: String!
-    state: String!
-    country: String!
-    postCode: String
-    residence: String
-    urbanization: String
-    municipality: String
-    additionalInfo: String
+    firstName: String! @constraint(minLength: 2, maxLength: 100)
+    lastName: String! @constraint(minLength: 2, maxLength: 100)
+    streetType: String! @constraint(minLength: 2, maxLength: 100)
+    street: String! @constraint(minLength: 2, maxLength: 100)
+    houseOrAptNumber: String! @constraint(minLength: 1, maxLength: 20)
+    city: String! @constraint(minLength: 2, maxLength: 100)
+    state: String! @constraint(minLength: 2, maxLength: 100)
+    country: String! @constraint(minLength: 2, maxLength: 100)
+    postCode: String @constraint(minLength: 2, maxLength: 100)
+    residence: String @constraint(minLength: 2, maxLength: 100)
+    urbanization: String @constraint(minLength: 2, maxLength: 100)
+    municipality: String @constraint(minLength: 2, maxLength: 100)
+    additionalInfo: String @constraint(minLength: 2, maxLength: 100)
   }
 
   input TotalInput {
@@ -44,15 +41,15 @@ module.exports = gql`
   }
 
   input PaymentInput {
-    card: String!
-    customer: String!
+    card: String! @constraint(maxLength: 100)
+    customer: String! @constraint(maxLength: 100)
   }
 
   input ShippingDataInput {
     address: AddressInput
-    courier: String!
-    method: String!
-    weight: String
+    courier: String! @constraint(minLength: 2, maxLength: 100)
+    method: String! @constraint(minLength: 2, maxLength: 100)
+    weight: String 
     dimensions: String
     total: TotalInput
     eta: String
@@ -60,11 +57,11 @@ module.exports = gql`
 
   input CreateOrderInput {
     cart: [ProductInput]!
-    userID: String!
-    firstName: String!
-    lastName: String!
-    email: String!
-    phoneNumber: String!
+    userID: String! @constraint(minLength: 2, maxLength: 100)
+    firstName: String! @constraint(minLength: 2, maxLength: 100)
+    lastName: String! @constraint(minLength: 2, maxLength: 100)
+    email: String! @constraint(minLength: 5, format: "email")
+    phoneNumber: String! @constraint(minLength: 9)
     total: TotalInput!
     payment: PaymentInput!
     shipping: ShippingDataInput!
@@ -72,69 +69,69 @@ module.exports = gql`
   }
 
   input UpdateOrderInput {
-    _id: ID!
+    _id: String! @constraint(minLength: 2, maxLength: 100, uniqueTypeName: "ID")
     cart: [ProductInput]
-    userID: String
-    firstName: String
-    lastName: String
-    email: String
-    phoneNumber: String
+    userID: String @constraint(minLength: 2, maxLength: 100)
+    firstName: String @constraint(minLength: 2, maxLength: 100)
+    lastName: String @constraint(minLength: 2, maxLength: 100)
+    email: String @constraint(minLength: 5, format: "email")
+    phoneNumber: String @constraint(minLength: 9)
     total: TotalInput
     shipping: ShippingDataInput
     status: String
   }
     
   input GetShippingCostsInput {
-    asin: String!
-    quantity: Int!
+    productID: String! @constraint(minLength: 2, maxLength: 100)
+    quantity: Int! @constraint(min: 1)
   }
   input GetUserInput {
-    firebaseID: ID!
+    firebaseID: String! @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
   }
 
   input UpdateAddressInput {
-    addressID: ID!
-    firstName: String
-    lastName: String
-    streetType: String
-    street: String
-    houseOrAptNumber: String
-    city: String
-    state: String
-    country: String
-    postCode: String
-    residence: String
-    urbanization: String
-    municipality: String
-    additionalInfo: String
+    addressID: String!  @constraint(minLength: 2, maxLength: 100, uniqueTypeName: "ID")
+    firstName: String  @constraint(minLength: 2, maxLength: 100)
+    lastName: String  @constraint(minLength: 2, maxLength: 100)
+    streetType: String  @constraint(minLength: 2, maxLength: 100)
+    street: String  @constraint(minLength: 2, maxLength: 100)
+    houseOrAptNumber: String  @constraint(minLength: 2, maxLength: 100)
+    city: String  @constraint(minLength: 2, maxLength: 100)
+    state: String  @constraint(minLength: 2, maxLength: 100)
+    country: String  @constraint(minLength: 2, maxLength: 100)
+    postCode: String  @constraint(minLength: 2, maxLength: 100)
+    residence: String  @constraint(minLength: 2, maxLength: 100)
+    urbanization: String  @constraint(minLength: 2, maxLength: 100)
+    municipality: String  @constraint(minLength: 2, maxLength: 100)
+    additionalInfo: String  @constraint(minLength: 2, maxLength: 500)
   }
 
   input CreateUserInput {
-    firebaseID: ID!
-    firstName: String!
-    lastName: String!
-    email: String!
-    phoneNumber: String!
+    firebaseID: String!  @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
+    firstName: String!  @constraint(minLength: 2, maxLength: 100)
+    lastName: String!  @constraint(minLength: 2, maxLength: 100)
+    email: String! @constraint(minLength: 5, format: "email")
+    phoneNumber: String! @constraint(minLength: 9)
   }
 
   input UpdateUserInput {
-    firebaseID: ID!
-    firstName: String!
-    lastName: String!
-    phoneNumber: String!
+    firebaseID: String! @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
+    firstName: String! @constraint(minLength: 2, maxLength: 100)
+    lastName: String! @constraint(minLength: 2, maxLength: 100)
+    phoneNumber: String! @constraint(minLength: 9)
   }
 
   input AddUserProductInput {
-    asin: ID!
+    productID: String! @constraint(minLength: 2, maxLength: 100, uniqueTypeName: "ID")
     price: Float!
-    qty: Int!
-    link: String!
+    qty: Int! @constraint(min: 1)
+    link: String! @constraint(format: "uri")
     supplier: SupplierInput
   }
 
   input ChangeUserStatusInput {
-    firebaseID: ID!
-    status: String!
+    firebaseID: String! @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
+    status: String! @constraint(minLength: 2, maxLength: 100)
   }
 
   input CustomerCardInput {
