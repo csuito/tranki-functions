@@ -1,4 +1,31 @@
 module.exports = {
+  isAuthenticatedRest: async (req, res, next) => {
+    const { authorization } = req.headers
+    if (!authorization) return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
+    const app = require("../../../functions/config/firebase")
+    const { isAPIKey } = require('uuid-apikey')
+    const Partner = require("../../model/partners")
+    const DBQuery = require("../helpers/dbSession")
+    if (isAPIKey(authorization)) {
+      try {
+        const addCount = Partner.updateOne(
+          { key: authorization },
+          { $inc: { count: 1 } }
+        )
+        await DBQuery(addCount)
+        return next()
+      } catch (e) {
+        return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
+      }
+    } else {
+      try {
+        await app.auth().verifyIdToken(authorization)
+        return next()
+      } catch (e) {
+        return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
+      }
+    }
+  },
   /**
    * Verifies jwt
    * @param args
