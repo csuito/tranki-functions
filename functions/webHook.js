@@ -1,6 +1,10 @@
 module.exports = async (req, res) => {
   console.log("Body: ", JSON.stringify(req.body))
 
+  if (!req.query || !req.query.category || !req.query.department) {
+    throw new Error("No department or category specified")
+  }
+
   if (process.env.NODE_ENV === "local") {
     require("dotenv").config()
   }
@@ -33,6 +37,8 @@ module.exports = async (req, res) => {
 
     let productCodes = getPrimeProductCodes(results)
 
+    // productCodes = [productCodes[90], productCodes[95]]
+
     console.log(`Results preprocessing done - ready to get ${productCodes && productCodes.length ? productCodes.length : 0} product details`)
 
     let products = await getProductDetails(productCodes, req.query)
@@ -58,13 +64,13 @@ module.exports = async (req, res) => {
       const index = algoliaClient.initIndex("products")
       const algoliaProducts = existingProducts.map(p => ({
         objectID: p.objectID,
-        asin: p.asin,
         specifications: p.specifications,
         title: p.title,
-        department: p.department,
+        department: req.query.department,
+        category: req.query.category,
         bestseller: p.bestseller,
         buybox_winner: p.buybox_winner,
-        asin: p.asin,
+        productID: p.asin,
         parent_asin: p.parent_asin,
         link: p.link,
         brand: p.brand,
@@ -95,13 +101,13 @@ module.exports = async (req, res) => {
       let inserts = []
       if (checkArray(newProducts)) {
         const algoliaProducts = newProducts.map(p => ({
-          asin: p.asin,
+          productID: p.asin,
           specifications: p.specifications,
           title: p.title,
-          department: p.department,
+          department: req.query.department,
+          category: req.query.category,
           bestseller: p.bestseller,
           buybox_winner: p.buybox_winner,
-          asin: p.asin,
           parent_asin: p.parent_asin,
           link: p.link,
           brand: p.brand,
@@ -125,19 +131,17 @@ module.exports = async (req, res) => {
         const newUniqueProducts = [...new Map(
           newProducts.map
             (item => [item['asin'], item])).values()
-        ]
+        ].map(p => ({ ...p, productID: p.asin, store: "Amazon" }))
         inserts = buildInsertOps(newUniqueProducts, objectIDs)
       }
 
       const Product = require("../server/model/products")
       console.log("Ready to execute DB operations:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
-
-      await Product.bulkWrite([...updates, ...inserts])
+      const allProducts = [...updates, ...inserts]
+      await Product.bulkWrite(allProducts)
       console.log("Saved products in DB")
     }
-
     await closeDB()
-
     return res.status(200).send()
   } catch (err) {
     console.log(err)
