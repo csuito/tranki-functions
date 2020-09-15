@@ -40,6 +40,7 @@ const price = new Schema({
 }, { _id: false })
 
 const shortProduct = new Schema({
+  productID: { type: String },
   asin: { type: String },
   title: { type: String },
   image: { type: String },
@@ -73,7 +74,8 @@ const shortProduct = new Schema({
 
 const productSchema = new Schema({
   title: { type: String, required: true },
-  asin: { type: String, required: true, unique: true, index: true },
+  productID: { type: String, required: true, unique: true, index: true },
+  store: { type: String, required: true },
   link: { type: String, required: true },
   is_prime: { type: Boolean },
   image: { type: String },

@@ -133,4 +133,15 @@ module.exports = `
     firebaseID: String! @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
     status: String! @constraint(minLength: 2, maxLength: 100)
   }
+
+  input CustomerCardInput {
+    firebaseID: ID!
+    card_id: String!
+    customer: String!
+  }
+
+  input ListCustomerCardInput {
+    firebaseID: ID!
+    customer: String!
+  }
 `
