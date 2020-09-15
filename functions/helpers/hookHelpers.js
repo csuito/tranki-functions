@@ -213,6 +213,7 @@ const getProductDetails = async (products, query = {}) => {
     productDetails = productDetails
       .filter(p => p.status === "fulfilled")
       .map(p => p.value)
+      .filter(p => p.data && p.data.product && p.data.product.buybox_winner)
 
 
     const productVariants = productDetails
@@ -256,6 +257,7 @@ const getProductDetails = async (products, query = {}) => {
     allVariants = allVariants
       .filter(v => v.status === "fulfilled")
       .map(v => v.value)
+      .filter(v => v.data && v.data.product && v.data.product.buybox_winner)
 
     productDetails = productDetails
       .map(p => {
@@ -270,7 +272,7 @@ const getProductDetails = async (products, query = {}) => {
                 const variant = v.data.product
                 const title = v.title
                 const link = v.link
-                const price = variant.price || variant.buybox_winner ? variant.buybox_winner.price : false
+                const price = variant.buybox_winner
                 const attributes = variant.attributes && variant.attributes.length > 0 ? variant.attributes : false
                 const specifications = variant.specifications && variant.specifications.length > 0 ? variant.specifications : false
                 const images = variant.images && variant.images.length > 0 ? variant.images : false

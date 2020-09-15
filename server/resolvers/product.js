@@ -8,11 +8,11 @@ const { getProductDetails } = require('../../functions/helpers/hookHelpers')
  */
 const getProduct = combineResolvers(
   isAuthenticated,
-  async (_, { asin }) => {
+  async (_, { productID }) => {
     const Product = require("../model/products")
     const DBQuery = require("./helpers/dbSession")
     try {
-      const query = Product.findOne({ asin }).lean()
+      const query = Product.findOne({ productID }).lean()
       return await DBQuery(query)
     } catch (err) {
       throw new Error("Unable to find product")
