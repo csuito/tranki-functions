@@ -9,5 +9,7 @@ module.exports = `
     dimensions: Float!
     weight: Float!
     volumetric_weight: Float!
+    airFee: Float!
+    seaFee: Float!
   }
 `

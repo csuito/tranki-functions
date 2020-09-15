@@ -3,7 +3,7 @@ const { isAuthenticated } = require('./middleware/auth')
 const { flatFeeDepartments, requestTypes } = require('../constants')
 const { client } = require('../../client')
 const AllSettled = require('promise.allsettled')
-const { getSpec, getShippingInfo, getCourierCosts } = require('../../functions/helpers/hookHelpers')
+const { getSpec, getCourierCosts } = require('../../functions/helpers/hookHelpers')
 
 
 /**
@@ -11,10 +11,10 @@ const { getSpec, getShippingInfo, getCourierCosts } = require('../../functions/h
  * @param {*} args
  */
 const getShippingCosts = combineResolvers(
-  // isAuthenticated,
+  isAuthenticated,
   async (_, { input }) => {
     let asins = input
-      .map(a => a.asin)
+      .map(a => a.productID)
 
     if (asins.length === 0) {
       return new Error('No asins provided')
@@ -37,7 +37,7 @@ const getShippingCosts = combineResolvers(
       {
         $or:
           [
-            { asin: { $in: asins } },
+            { productID: { $in: asins } },
             { variants: { $elemMatch: { asin: { $in: asins } } } }
           ]
       })
@@ -71,7 +71,7 @@ const getShippingCosts = combineResolvers(
     // Fetching products or variants requested by the user
     products = products
       .map(p => {
-        if (asins.includes(p.asin)) {
+        if (asins.includes(p.productID)) {
           return p
         }
         if (p.variants && p.variants.length > 0) {
@@ -97,7 +97,6 @@ const getShippingCosts = combineResolvers(
 
     let allEstimations = await AllSettled(stockEstimations)
 
-
     allEstimations = allEstimations
       .filter(a => a.status === "fulfilled" && a.value.data.stock_estimation)
       .map(a => a.value.data.stock_estimation)
@@ -109,14 +108,26 @@ const getShippingCosts = combineResolvers(
         in_stock.push(estimation.asin)
       }
       const existingRegistry = stocks.find(s => s.asin === estimation.asin)
-      const existingProduct = products.find(p => p.asin === estimation.asin)
+      const existingProduct = products.find(p => p.productID === estimation.asin)
       const productPrice = existingProduct.buybox_winner.price
       const stockPrice = estimation.price
 
       if (productPrice.value !== stockPrice.value) {
         price_changed = true
         dbOps.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
+        const productIdx = products.findIndex(p => p.productID === existingProduct.productID)
+        products[productIdx] = {
+          ...existingProduct,
+          buybox_winner: {
+            ...existingProduct.buybox_winner,
+            price: {
+              ...existingProduct.buybox_winner.price,
+              value: stockPrice.value
+            }
+          }
+        }
       }
+
       if (existingRegistry) {
         dbOps.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() })))
       } else {
@@ -128,20 +139,20 @@ const getShippingCosts = combineResolvers(
       await Promise.all(dbOps)
     }
 
-    // Calculating shipping costs for all dynamic and static products that are in stock
-    products = products.filter(p => in_stock.includes(p.asin))
+    // Calculating shipping and processing costs for all dynamic and static products that are in stock
+    products = products.filter(p => in_stock.includes(p.productID))
     const flatFeeProducts = products.filter(p => flatFeeDepartments.includes(p.department))
     const dynamicFeeProducts = products.filter(p => !flatFeeDepartments.includes(p.department))
+
     let orderDimensions = 0, orderWeight = 0, orderVolWeight = 0,
       minVol = 0.33, courierFtPrice = 15,
-      courierLbPrice = 5.5, minWeight = 1
+      courierLbPrice = 5.5, minWeight = 1, totalOrderPrice = 0
 
     for (let i = 0; i < dynamicFeeProducts.length; i++) {
-
       const p = dynamicFeeProducts[i]
-      const { lb3Vol, ft3Vol, weight } = p
+      const { lb3Vol, ft3Vol, weight, buybox_winner } = p
       const { quantity: qty } = input.find(i => i.asin === p.asin)
-
+      totalOrderPrice += buybox_winner.price.value
       const productFt3Vol = ft3Vol * qty
       const productWeight = weight * qty
       const productLb3Vol = lb3Vol * qty
@@ -171,6 +182,8 @@ const getShippingCosts = combineResolvers(
 
     const finalAirPrice = airCost / markup
     const finalSeaPrice = seaCost / markup
+    const airStripeFee = (((finalAirPrice + totalOrderPrice) * 2.9) / 100) + 0.3
+    const seaStripeFee = (((finalSeaPrice + totalOrderPrice) * 2.9) / 100) + 0.3
 
     return {
       air: finalAirPrice < 15 ? 15 : finalAirPrice,
@@ -181,7 +194,9 @@ const getShippingCosts = combineResolvers(
       airCost,
       weight: orderWeight,
       dimensions: orderDimensions,
-      volumetric_weight: orderVolWeight
+      volumetric_weight: orderVolWeight,
+      airFee: airStripeFee,
+      seaFee: seaStripeFee
     }
 
   })
