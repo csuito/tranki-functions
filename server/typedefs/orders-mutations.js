@@ -1,6 +1,4 @@
-const { gql } = require("apollo-server-express")
-
-module.exports = gql`
+module.exports = `
   type Mutation {
     createOrder(input: CreateOrderInput!): Order
     updateOrder(input: UpdateOrderInput!): Order

@@ -1,12 +1,12 @@
 const GraphQLTester = require("easygraphql-tester")
-const { gql } = require("apollo-server-express")
 const { expect } = require("chai")
 
+const { constraintDirectiveTypeDefs } = require('graphql-constraint-directive')
 const typeDefs = require("../server/typedefs")
 const resolvers = require("../server/resolvers")
 
 describe("test graphql ORDERS queries", () => {
-  const ordersQuery = gql`
+  const ordersQuery = `
     query getAllOrders {
       orders {
         _id
@@ -64,7 +64,7 @@ describe("test graphql ORDERS queries", () => {
     }
   `
 
-  const orderQuery = gql`
+  const orderQuery = `
     query getOrder($_id: ID!) {
       order(_id: $_id) {
         _id
@@ -173,11 +173,11 @@ describe("test graphql ORDERS queries", () => {
 
   let tester
   before(() => {
-    tester = new GraphQLTester(typeDefs, resolvers)
+    tester = new GraphQLTester(`${constraintDirectiveTypeDefs} ${typeDefs}`, resolvers)
   })
 
   it("should fail on invalid orders query", () => {
-    const invalidQuery = gql`
+    const invalidQuery = `
       query getAllOrders {
         orders {
           _id
@@ -220,7 +220,7 @@ describe("test graphql ORDERS queries", () => {
   })
 
   it("should fail on invalid order query", () => {
-    const invalidQuery = gql`
+    const invalidQuery = `
       query getOrder($_id: ID!) {
         order(_id: $_id) {
           _id

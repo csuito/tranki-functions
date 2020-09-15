@@ -1,13 +1,13 @@
 // https://easygraphql.com/docs/easygraphql-tester/usage/#mocking-queries-and-mutations
 const GraphQLTester = require("easygraphql-tester")
-const { gql } = require("apollo-server-express")
 const { expect } = require("chai")
 
+const { constraintDirectiveTypeDefs } = require('graphql-constraint-directive')
 const typeDefs = require("../server/typedefs")
 const resolvers = require("../server/resolvers")
 
 describe("test graphql BESTSELLERS queries", () => {
-  const bestsellersQuery = gql`
+  const bestsellersQuery = `
     query getBestsellers($url: String!, $page: Int) {
       bestsellers(url: $url, page: $page) {
         bestsellers {
@@ -54,11 +54,11 @@ describe("test graphql BESTSELLERS queries", () => {
 
   let tester
   before(() => {
-    tester = new GraphQLTester(typeDefs, resolvers)
+    tester = new GraphQLTester(`${constraintDirectiveTypeDefs} ${typeDefs}`, resolvers)
   })
 
   it("should fail on invalid bestellers query", () => {
-    const invalidQuery = gql`
+    const invalidQuery = `
     query getBestsellers {
       bestsellers {
         rank

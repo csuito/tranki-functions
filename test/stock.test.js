@@ -1,13 +1,13 @@
 // https://easygraphql.com/docs/easygraphql-tester/usage/#mocking-queries-and-mutations
 const GraphQLTester = require("easygraphql-tester")
-const { gql } = require("apollo-server-express")
 const { expect } = require("chai")
 
 const typeDefs = require("../server/typedefs")
 const resolvers = require("../server/resolvers")
+const { constraintDirectiveTypeDefs } = require("graphql-constraint-directive")
 
 describe("test graphql STOCK_ESTIMATION queries", () => {
-  const stockQuery = gql`
+  const stockQuery = `
     query getStock($asin: ID!) {
       stock(asin: $asin) {
         asin
@@ -43,11 +43,11 @@ describe("test graphql STOCK_ESTIMATION queries", () => {
 
   let tester
   before(() => {
-    tester = new GraphQLTester(typeDefs, resolvers)
+    tester = new GraphQLTester(`${constraintDirectiveTypeDefs} ${typeDefs}`, resolvers)
   })
 
   it("should fail on invalid stock_estimation query", async () => {
-    const invalidQuery = gql`
+    const invalidQuery = `
     query getStock($asin: ID!) {
       stock(asin: $asin) {
         asin

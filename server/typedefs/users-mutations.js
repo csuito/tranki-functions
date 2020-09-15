@@ -1,6 +1,4 @@
-const { gql } = require("apollo-server-express")
-
-module.exports = gql`
+module.exports = `
   type Mutation {
     createUser(input: CreateUserInput!): User
     updateUser(input: UpdateUserInput!): User

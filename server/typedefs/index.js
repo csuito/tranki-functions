@@ -1,4 +1,3 @@
-const { gql } = require("apollo-server-express")
 const inputs = require('./inputs')
 const stripeSchema = require('./stripe')
 const productSchema = require("./product")
@@ -13,7 +12,7 @@ const userSchema = require("./users")
 const ordersSchema = require("./orders")
 const shippingCostSchema = require('./shipping-cost')
 
-const queries = gql`
+const queries = `
   type Query {
     product(asin: ID!): Product
     users: [User]
@@ -35,7 +34,7 @@ const queries = gql`
   }
 `
 
-const mutations = gql`
+const mutations = `
     type Mutation {
     createOrder(input: CreateOrderInput!): Order
     updateOrder(input: UpdateOrderInput!): Order
@@ -49,4 +48,4 @@ const mutations = gql`
   }
 `
 
-module.exports = [inputs, productSchema, categorySchema, searchSchema, stockSchema, reviewSchema, bestsellerSchema, departmentSchema, bannerSchema, userSchema, ordersSchema, shippingCostSchema, stripeSchema, queries, mutations]
+module.exports = `${inputs} ${productSchema} ${categorySchema} ${searchSchema} ${stockSchema} ${reviewSchema} ${bestsellerSchema} ${departmentSchema} ${bannerSchema} ${userSchema} ${ordersSchema} ${shippingCostSchema} ${stripeSchema} ${queries} ${mutations}`
