@@ -6,7 +6,7 @@ const { isAuthenticated } = require("./middleware/auth")
  * @param {string} asin - amazon product id
  */
 const getStockEstimation = combineResolvers(
-  // isAuthenticated,
+  isAuthenticated,
   async (_, { asin }) => {
 
     const { client } = require("../../client")

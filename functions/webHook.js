@@ -1,6 +1,10 @@
 module.exports = async (req, res) => {
   console.log("Body: ", JSON.stringify(req.body))
 
+  if (!req.query || !req.query.category || !req.query.department) {
+    throw new Error("No department or category specified")
+  }
+
   if (process.env.NODE_ENV === "local") {
     require("dotenv").config()
   }
@@ -33,7 +37,6 @@ module.exports = async (req, res) => {
 
     let productCodes = getPrimeProductCodes(results)
 
-
     // productCodes = [productCodes[90], productCodes[95]]
 
     console.log(`Results preprocessing done - ready to get ${productCodes && productCodes.length ? productCodes.length : 0} product details`)
@@ -63,7 +66,8 @@ module.exports = async (req, res) => {
         objectID: p.objectID,
         specifications: p.specifications,
         title: p.title,
-        department: p.department,
+        department: req.query.department,
+        category: req.query.category,
         bestseller: p.bestseller,
         buybox_winner: p.buybox_winner,
         productID: p.asin,
@@ -100,7 +104,8 @@ module.exports = async (req, res) => {
           productID: p.asin,
           specifications: p.specifications,
           title: p.title,
-          department: p.department,
+          department: req.query.department,
+          category: req.query.category,
           bestseller: p.bestseller,
           buybox_winner: p.buybox_winner,
           parent_asin: p.parent_asin,

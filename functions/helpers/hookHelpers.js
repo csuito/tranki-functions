@@ -27,14 +27,19 @@ const getPrimeProductCodes = results => results
   .reduce((prev, curr) => prev.concat(curr.data), [])
   .map(data => data.result)
   .reduce((prev, curr) => {
-    switch (curr.request_parameters.type) {
-      case requestTypes.CATEGORY:
-        return prev.concat(curr.category_results)
-      case requestTypes.BESTSELLERS:
-        return prev.concat(curr.bestsellers)
-      case requestTypes.SEARCH:
-        return prev.concat(curr.search_results)
+    if (curr && curr.request_parameters) {
+      switch (curr.request_parameters.type) {
+        case requestTypes.CATEGORY:
+          return prev.concat(curr.category_results)
+        case requestTypes.BESTSELLERS:
+          return prev.concat(curr.bestsellers)
+        case requestTypes.SEARCH:
+          return prev.concat(curr.search_results)
+        case requestTypes.PRODUCT:
+          return prev.concat(curr.product)
+      }
     }
+    return prev
   }, [])
   .filter(product => containsRequiredProperties(product))
   .map(product => product.asin)
