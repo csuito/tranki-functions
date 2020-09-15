@@ -32,6 +32,7 @@ const queries = gql`
     departments: [Department]
     banners: [Banner]
     shipping(input:[GetShippingCostsInput!]): ShippingCost
+    listCustomerCards(input: ListCustomerCardInput!) : [StripeCard]
   }
 `
 
@@ -46,6 +47,7 @@ const mutations = gql`
     addUserProduct(input: AddUserProductInput!): Boolean
     changeUserStatus(input: ChangeUserStatusInput!): String
     onBoardStripeUser(input: StripeOnBoardInput!): StripeCard
+    removeCustomerCard(input: CustomerCardInput!): Boolean
   }
 `
 

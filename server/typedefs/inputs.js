@@ -136,4 +136,15 @@ module.exports = gql`
     firebaseID: ID!
     status: String!
   }
+
+  input CustomerCardInput {
+    firebaseID: ID!
+    card_id: String!
+    customer: String!
+  }
+
+  input ListCustomerCardInput {
+    firebaseID: ID!
+    customer: String!
+  }
 `

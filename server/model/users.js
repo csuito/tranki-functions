@@ -24,7 +24,7 @@ const userSchema = new Schema({
     id: { type: String },
     cards: [{
       last4: { type: String },
-      type: { type: String },
+      brand: { type: String },
       id: { type: String },
       token: { type: String }
     }]
