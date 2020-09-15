@@ -31,11 +31,11 @@ describe("test graphql REVIEWS queries", () => {
           rating
           reviews_positive
           reviews_critical
+          reviews_total
         }
         pagination {
           current_page
           total_pages
-          reviews_total
         }
       }
     }

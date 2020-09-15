@@ -8,8 +8,8 @@ const { constraintDirectiveTypeDefs } = require("graphql-constraint-directive")
 
 describe("test graphql PRODUCT queries", () => {
   const productQuery = `
-    query getProduct($asin: ID!) {
-      product(asin: $asin) {
+    query getProduct($productID: ID!) {
+      product(productID: $productID) {
         asin
         title
         brand
@@ -24,7 +24,7 @@ describe("test graphql PRODUCT queries", () => {
   }
 
   const testVariables = {
-    asin: testProduct.asin
+    productID: testProduct.asin
   }
 
   let tester
@@ -34,9 +34,9 @@ describe("test graphql PRODUCT queries", () => {
 
   it("should fail on invalid product query", async () => {
     const invalidQuery = `
-    query getProduct($asin: ID!) {
-      product(asin: $asin) {
-        asin
+    query getProduct($productID: ID!) {
+      product(productID: $productID) {
+        productID
         title
         invalid_field
       }

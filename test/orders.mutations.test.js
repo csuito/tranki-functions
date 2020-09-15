@@ -26,18 +26,14 @@ describe("test graphql ORDERS mutations", () => {
         shipping {
           address {
             ... on VenezuelanAddress {
-              streetType
               street
               houseOrAptNumber
               city
               country
-              residence
               municipality
-              urbanization
             }
 
             ... on GenericAddress {
-              streetType
               street
               houseOrAptNumber
               city
@@ -71,7 +67,7 @@ describe("test graphql ORDERS mutations", () => {
   const createOrderInput = {
     cart: [
       {
-        asin: "12345",
+        productID: "12345",
         price: 55.50,
         qty: 2,
         variant: "red",
@@ -91,21 +87,18 @@ describe("test graphql ORDERS mutations", () => {
     },
     payment: {
       card: "card_1HPkmBK9woMnl4elgvOkQnUt",
-      amount: 100.25
+      customer: 'cus_HzqK5jCl0Vt6fM'
     },
     shipping: {
       address: {
         firstName: "Juan",
         lastName: "Perez",
-        street: "Sur 8",
-        streetType: "Avenida",
+        street: "Avenida Sur 8",
         houseOrAptNumber: "Piso-5, Torre B",
         country: "Venezuela",
         city: "Caracas",
         state: "Distrito Capital",
         postCode: "1003",
-        residence: "Loma Linda",
-        urbanization: "La Lagunita",
         municipality: "El Hatillo",
         additionalInfo: "Dejar paquete en vigilancia"
       },

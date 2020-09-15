@@ -23,27 +23,19 @@ describe("test graphql ORDERS queries", () => {
           cost
           price
         }
-        payment {
-          txID
-          method
-        }
         shipping {
           address {
             __typename
 
             ... on VenezuelanAddress {
-              streetType
               street
               houseOrAptNumber
               city
               country
-              residence
               municipality
-              urbanization
             }
 
             ... on GenericAddress {
-              streetType
               street
               houseOrAptNumber
               city
@@ -90,7 +82,6 @@ describe("test graphql ORDERS queries", () => {
             __typename
 
             ... on GenericAddress {
-              streetType
               street
               houseOrAptNumber
               city
@@ -98,14 +89,11 @@ describe("test graphql ORDERS queries", () => {
             }
 
             ... on VenezuelanAddress {
-              streetType
               street
               houseOrAptNumber
               city
               country
-              residence
               municipality
-              urbanization
             }
           }
           courier
@@ -145,22 +133,19 @@ describe("test graphql ORDERS queries", () => {
       price: 100.25
     },
     payment: {
-      txID: "12345",
-      method: "credit card"
+      card: "card_1HPkmBK9woMnl4elgvOkQnUt",
+      customer: 'cus_HzqK5jCl0Vt6fM'
     },
     shipping: {
       address: {
         firstName: "Juan",
         lastName: "Perez",
-        street: "Sur 8",
-        streetType: "Avenida",
-        houseOrAptNumber: "Piso-5, Torre B",
+        street: "Avenida Sur 8, La Lagunita",
+        houseOrAptNumber: "Edificio La Vista, Piso-5, Torre B",
         country: "Venezuela",
         city: "Caracas",
         state: "Distrito Capital",
         postCode: "1003",
-        residence: "Loma Linda",
-        urbanization: "La Lagunita",
         municipality: "El Hatillo",
         additionalInfo: "Dejar paquete en vigilancia"
       },
@@ -207,18 +192,6 @@ describe("test graphql ORDERS queries", () => {
     expect(result.userID).to.be.a("string").to.equal(testOrder.userID)
   })
 
-  it("should return correct shipping address __typename on orders query (VenezuelanAddress)", () => {
-    const fixture = {
-      data: {
-        orders: [{ ...testOrder }]
-      }
-    }
-
-    const { data: { orders: [result] } } = tester.mock({ query: ordersQuery, fixture })
-    const address = result.shipping.address
-    expect(address.__typename).to.be.a("string").to.equal("VenezuelanAddress")
-  })
-
   it("should fail on invalid order query", () => {
     const invalidQuery = `
       query getOrder($_id: ID!) {
@@ -248,16 +221,5 @@ describe("test graphql ORDERS queries", () => {
     const { data: { order } } = tester.mock({ query: orderQuery, fixture, variables: { _id: "12345" } })
     expect(order._id).to.be.a("string").to.equal(testOrder._id)
     expect(order.userID).to.be.a("string").to.equal(testOrder.userID)
-  })
-
-  it("should return correct shipping address __typename on order query (VenezuelanAddress)", () => {
-    const fixture = {
-      data: {
-        order: { ...testOrder }
-      }
-    }
-
-    const { data: { order: { shipping: { address } } } } = tester.mock({ query: orderQuery, fixture, variables: { _id: "12345" } })
-    expect(address.__typename).to.be.a("string").to.equal("VenezuelanAddress")
   })
 })
