@@ -23,13 +23,13 @@ module.exports = `
     firstName: String! @constraint(minLength: 2, maxLength: 100)
     lastName: String! @constraint(minLength: 2, maxLength: 100)
     street: String! @constraint(minLength: 2, maxLength: 100)
-    houseOrAptNumber: String! @constraint(minLength: 1, maxLength: 20)
+    houseOrAptNumber: String! @constraint(minLength: 1, maxLength: 100)
     city: String! @constraint(minLength: 2, maxLength: 100)
     state: String! @constraint(minLength: 2, maxLength: 100)
     country: String! @constraint(minLength: 2, maxLength: 100)
-    postCode: String @constraint(minLength: 2, maxLength: 100)
-    municipality: String @constraint(minLength: 2, maxLength: 100)
-    additionalInfo: String @constraint(minLength: 2, maxLength: 100)
+    municipality: String @constraint(minLength: 2, maxLength: 50)
+    postCode: String @constraint(maxLength: 6)
+    additionalInfo: String @constraint(maxLength: 150)
   }
 
   input TotalInput {
@@ -88,16 +88,20 @@ module.exports = `
 
   input UpdateAddressInput {
     addressID: String!  @constraint(minLength: 2, maxLength: 100, uniqueTypeName: "ID")
-    firstName: String  @constraint(minLength: 2, maxLength: 100)
-    lastName: String  @constraint(minLength: 2, maxLength: 100)
-    street: String  @constraint(minLength: 2, maxLength: 100)
-    houseOrAptNumber: String  @constraint(minLength: 2, maxLength: 100)
-    city: String  @constraint(minLength: 2, maxLength: 100)
-    state: String  @constraint(minLength: 2, maxLength: 100)
-    country: String  @constraint(minLength: 2, maxLength: 100)
-    postCode: String  @constraint(minLength: 2, maxLength: 100)
-    municipality: String  @constraint(minLength: 2, maxLength: 100)
-    additionalInfo: String  @constraint(minLength: 2, maxLength: 500)
+    firstName: String! @constraint(minLength: 2, maxLength: 100)
+    lastName: String! @constraint(minLength: 2, maxLength: 100)
+    street: String! @constraint(minLength: 2, maxLength: 100)
+    houseOrAptNumber: String! @constraint(minLength: 1, maxLength: 100)
+    city: String! @constraint(minLength: 2, maxLength: 100)
+    state: String! @constraint(minLength: 2, maxLength: 100)
+    country: String! @constraint(minLength: 2, maxLength: 100)
+    municipality: String @constraint(minLength: 2, maxLength: 50)
+    postCode: String @constraint(maxLength: 6)
+    additionalInfo: String @constraint(maxLength: 150)
+  }
+
+  input RemoveUserAddressInput {
+    addressID: String!  @constraint(minLength: 2, maxLength: 100, uniqueTypeName: "ID")
   }
 
   input CreateUserInput {
