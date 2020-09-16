@@ -73,7 +73,8 @@ module.exports = {
         const query = User.findOneAndUpdate(
           { firebaseID, 'shippingAddresses._id': input.addressID },
           { $set: { 'shippingAddresses.$': input } },
-          { new: true })
+          { new: true }
+        )
         return await DBQuery(query)
       } catch (e) {
         return e
@@ -87,14 +88,11 @@ module.exports = {
       const { user_id: firebaseID } = await app.auth().verifyIdToken(auth)
 
       try {
-        const query = User.findOne({ firebaseID })
-        const user = await DBQuery(query)
+        const getUser = User.findOne({ firebaseID })
+        const user = await DBQuery(getUser)
 
-        const addresses = user.shippingAddresses.filter(address => address._id !== input.addressID)
-        user.shippingAddresses = addresses
-
-        const save = user.save()
-        await DBQuery(save)
+        user.shippingAddresses.id(input.addressID).remove()
+        await DBQuery(user.save())
         return true
       } catch (e) {
         return e
