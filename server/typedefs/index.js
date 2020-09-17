@@ -43,6 +43,7 @@ const mutations = `
     updateUser(input: UpdateUserInput!): User
     addUserAddress(input: AddressInput!): User
     updateUserAddress(input: UpdateAddressInput!): User
+    removeUserAddress(input: RemoveUserAddressInput): Boolean
     addUserProduct(input: AddUserProductInput!): Boolean
     changeUserStatus(input: ChangeUserStatusInput!): String
     onBoardStripeUser(input: StripeOnBoardInput!): StripeCard

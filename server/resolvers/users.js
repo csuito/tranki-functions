@@ -1,10 +1,9 @@
 const { combineResolvers } = require("graphql-resolvers")
-const { isOwner, isAdmin } = require("./middleware/auth")
+const { isOwner, isAdmin, isAuthenticated } = require("./middleware/auth")
 const DBQuery = require("./helpers/dbSession")
 const User = require("../model/users")
 
 module.exports = {
-
   userExists: async (_, { email, firebaseID, phoneNumber }, ctx) => {
     try {
       let queryParams = {}
@@ -48,11 +47,14 @@ module.exports = {
     }),
 
   addUserAddress: combineResolvers(
-    isOwner,
-    async (_, { input }) => {
+    isAuthenticated,
+    async (_, { input }, { auth }) => {
+      const app = require("../../functions/config/firebase")
+      const { user_id: firebaseID } = await app.auth().verifyIdToken(auth)
+
       try {
         const query = User.findOneAndUpdate(
-          { firebaseID: input.firebaseID },
+          { firebaseID },
           { $push: { shippingAddresses: input } },
           { new: true })
         return await DBQuery(query)
@@ -62,14 +64,36 @@ module.exports = {
     }),
 
   updateUserAddress: combineResolvers(
-    isOwner,
-    async (_, { input }) => {
+    isAuthenticated,
+    async (_, { input }, { auth }) => {
+      const app = require("../../functions/config/firebase")
+      const { user_id: firebaseID } = await app.auth().verifyIdToken(auth)
+
       try {
         const query = User.findOneAndUpdate(
-          { firebaseID: input.firebaseID, 'shippingAddresses._id': input.addressID },
+          { firebaseID, 'shippingAddresses._id': input.addressID },
           { $set: { 'shippingAddresses.$': input } },
-          { new: true })
+          { new: true }
+        )
         return await DBQuery(query)
+      } catch (e) {
+        return e
+      }
+    }),
+
+  removeUserAddress: combineResolvers(
+    isAuthenticated,
+    async (_, { input }, { auth }) => {
+      const app = require("../../functions/config/firebase")
+      const { user_id: firebaseID } = await app.auth().verifyIdToken(auth)
+
+      try {
+        const getUser = User.findOne({ firebaseID })
+        const user = await DBQuery(getUser)
+
+        user.shippingAddresses.id(input.addressID).remove()
+        await DBQuery(user.save())
+        return true
       } catch (e) {
         return e
       }

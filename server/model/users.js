@@ -31,6 +31,6 @@ const userSchema = new Schema({
   }
 })
 
-userSchema.path("shippingAddresses").discriminator("VEN", venezuelanAddressSchema)
+userSchema.path("shippingAddresses").discriminator("Venezuela", venezuelanAddressSchema)
 
 module.exports = model("User", userSchema)

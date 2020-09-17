@@ -3,7 +3,6 @@ const { Schema } = require("mongoose")
 const addressSchema = new Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  streetType: { type: String, required: true },
   street: { type: String, required: true },
   houseOrAptNumber: { type: String, required: true },
   country: { type: String, required: true },
@@ -14,8 +13,6 @@ const addressSchema = new Schema({
 }, { discriminatorKey: "country" })
 
 const venezuelanAddressSchema = new Schema({
-  residence: { type: String },
-  urbanization: { type: String },
   municipality: { type: String, required: true },
 })
 

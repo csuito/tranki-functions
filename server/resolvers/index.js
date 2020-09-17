@@ -1,6 +1,7 @@
 const { orders, order, createOrder, updateOrder, userOrders } = require("./orders")
-const { createUser, updateUser, addUserAddress, updateUserAddress, addUserProduct, user, users, activeUsers, changeUserStatus, userExists } = require("./users")
+const { createUser, updateUser, addUserAddress, updateUserAddress, removeUserAddress, addUserProduct, user, users, activeUsers, changeUserStatus, userExists } = require("./users")
 const { onBoardStripeUser, removeCustomerCard, listCustomerCards } = require('./stripe')
+
 module.exports = {
   Query: {
     orders,
@@ -29,6 +30,7 @@ module.exports = {
     updateUser,
     addUserAddress,
     updateUserAddress,
+    removeUserAddress,
     addUserProduct,
     changeUserStatus,
     onBoardStripeUser,
@@ -36,10 +38,11 @@ module.exports = {
   },
   Address: {
     __resolveType(data, ctx, info) {
-      if (data.country === "VEN") {
+      if (data.country === "Venezuela") {
         return info.schema.getType("VenezuelanAddress")
+      } else {
+        return info.schema.getType("GenericAddress")
       }
-      return info.schema.getType("GenericAddress")
     }
   },
 }

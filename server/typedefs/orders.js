@@ -27,7 +27,6 @@ module.exports = `
     _id: ID
     firstName: String
     lastName: String
-    streetType: String
     street: String
     houseOrAptNumber: String
     city: String
@@ -41,7 +40,6 @@ module.exports = `
     _id: ID
     firstName: String
     lastName: String
-    streetType: String
     street: String
     houseOrAptNumber: String
     city: String
@@ -55,7 +53,6 @@ module.exports = `
     _id: ID
     firstName: String
     lastName: String
-    streetType: String
     street: String
     houseOrAptNumber: String
     city: String
@@ -63,8 +60,6 @@ module.exports = `
     state: String
     postCode: String
     additionalInfo: String
-    residence: String
-    urbanization: String
     municipality: String
   }
 
