@@ -193,18 +193,20 @@ const getProductDetails = async (products, query = {}) => {
   }))
   const { bestseller = false, department = "", category = "", offer = false } = query
   try {
-
-
-
     let productDetails = []
     // Batching and throttling requests if there are more than 100 products
-    if (getProducts.length > 100) {
+    if (getProducts.length > 500) {
+      console.log("Batching")
       const numBatches = Math.ceil(getProducts.length / 250)
       const batches = splitUp(getProducts, numBatches)
+      console.log({ numBatches })
       for (let batch of batches) {
+        console.time("batch")
+        console.log("Batch length: ", batch.length)
         const newProducts = await AllSettled(batch)
         productDetails = [...productDetails, ...newProducts]
         await waitFor(2000)
+        console.timeEnd("batch")
       }
     } else {
       productDetails = await AllSettled(getProducts)
@@ -241,13 +243,18 @@ const getProductDetails = async (products, query = {}) => {
 
     let allVariants = []
     // Batching and throttling requests if there are more than 100 variants
-    if (_allVariants.length > 100) {
+    if (_allVariants.length > 500) {
+      console.log("Batching variants")
       const numBatches = Math.ceil(_allVariants.length / 250)
       const variantBatches = splitUp(_allVariants, numBatches)
+      console.log({ numBatches })
       for (let batch of variantBatches) {
+        console.time("variantBatch")
+        console.log("Batch length: ", batch.length)
         const newVariants = await AllSettled(batch)
         allVariants = [...allVariants, ...newVariants]
         await waitFor(2000)
+        console.timeEnd("variantBatch")
       }
     } else {
       allVariants = await AllSettled(_allVariants)
@@ -291,8 +298,6 @@ const getProductDetails = async (products, query = {}) => {
           ...p, data: { ...p.data, product: { ...product, variants: pVariants } }
         }
         return result
-
-
       })
 
     const allProducts = productDetails.

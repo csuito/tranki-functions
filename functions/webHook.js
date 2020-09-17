@@ -37,6 +37,7 @@ module.exports = async (req, res) => {
 
     let productCodes = getPrimeProductCodes(results)
 
+    productCodes = [...new Set(productCodes)]
     // productCodes = [productCodes[90], productCodes[95]]
 
     console.log(`Results preprocessing done - ready to get ${productCodes && productCodes.length ? productCodes.length : 0} product details`)
@@ -53,24 +54,50 @@ module.exports = async (req, res) => {
         return { ...p, ft3Vol, lb3Vol, weight }
       })
 
+
+    products = products
+      .map(p => {
+        let variants = p.variants
+        if (variants && variants.length) {
+          variants = variants
+            .map(v => {
+              const { weightSpec: variantWeight, dimensionSpec: variantDimension } = getSpec(v)
+              if (!variantWeight || !variantDimension) {
+                const { weightSpec, dimensionSpec } = getSpec(p)
+                const { ft3Vol, weight, lb3Vol } = getShippingInfo(weightSpec, dimensionSpec, 1)
+                return { ...v, ft3Vol, lb3Vol, weight }
+              }
+              const { ft3Vol, weight, lb3Vol } = getShippingInfo(variantWeight, variantDimension, 1)
+              return { ...v, ft3Vol, lb3Vol, weight }
+            })
+          return { ...p, variants }
+        }
+        return p
+      })
+
     console.log(`Products: ${products && products.length > 0 ? products.length : 0}`)
 
-    const { existingProducts, newProducts } = await splitProductsByOpType(products)
+    let { existingProducts, newProducts } = await splitProductsByOpType(products)
 
     console.log("Products breakdown:", { existingProducts: existingProducts.length, newProducts: newProducts.length, totalProducts: (existingProducts.length + newProducts.length) })
+
+    newProducts = newProducts
+      .map(p => ({ ...p, productID: p.asin, store: "Amazon" }))
 
     if (checkArray(existingProducts) || checkArray(newProducts)) {
       const algoliaClient = require("./config/algolia")()
       const index = algoliaClient.initIndex("products")
       const algoliaProducts = existingProducts.map(p => ({
         objectID: p.objectID,
+        productID: p.productID,
+        store: p.store,
         specifications: p.specifications,
         title: p.title,
         department: req.query.department,
         category: req.query.category,
         bestseller: p.bestseller,
         buybox_winner: p.buybox_winner,
-        productID: p.asin,
+        productID: p.productID,
         parent_asin: p.parent_asin,
         link: p.link,
         brand: p.brand,
@@ -92,16 +119,15 @@ module.exports = async (req, res) => {
         await index.saveObjects(algoliaProducts, {
           autoGenerateObjectIDIfNotExist: true
         })
-
         console.log(`Updated ${existingProducts.length} products in Algolia`)
-
         updates = buildUpdateOps(existingProducts)
       }
 
       let inserts = []
       if (checkArray(newProducts)) {
         const algoliaProducts = newProducts.map(p => ({
-          productID: p.asin,
+          productID: p.productID,
+          store: p.store,
           specifications: p.specifications,
           title: p.title,
           department: req.query.department,
@@ -128,13 +154,8 @@ module.exports = async (req, res) => {
           autoGenerateObjectIDIfNotExist: true
         })
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
-        const newUniqueProducts = [...new Map(
-          newProducts.map
-            (item => [item['asin'], item])).values()
-        ].map(p => ({ ...p, productID: p.asin, store: "Amazon" }))
-        inserts = buildInsertOps(newUniqueProducts, objectIDs)
+        inserts = buildInsertOps(newProducts, objectIDs)
       }
-
       const Product = require("../server/model/products")
       console.log("Ready to execute DB operations:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
       const allProducts = [...updates, ...inserts]

@@ -1,6 +1,6 @@
 module.exports = `
   type Product {
-    asin: ID!
+    productID: ID!
     title: String
     sub_title: SubTitle
     brand: String

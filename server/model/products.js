@@ -61,6 +61,9 @@ const shortProduct = new Schema({
     name: { type: String },
     value: { type: String }
   }],
+  ft3Vol: { type: Number },
+  lb3Vol: { type: Number },
+  weight: { type: Number },
   shipping_weight: { type: String },
   buybox_winner: {
     is_prime: { type: Boolean },
@@ -96,7 +99,7 @@ const productSchema = new Schema({
   images: [image],
   images_count: { type: Number },
   summarization_attributes: [summarization_attribute],
-  bestsellers_rank: [bestsellers_rank],
+  // bestsellers_rank: [bestsellers_rank],
   feature_bullets: [{ type: String }],
   sub_title: {
     text: { type: String },
