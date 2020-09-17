@@ -108,25 +108,26 @@ const getShippingCosts = combineResolvers(
         in_stock.push(estimation.asin)
       }
       const existingRegistry = stocks.find(s => s.asin === estimation.asin)
-      const existingProduct = products.find(p => p.productID === estimation.asin)
-      const productPrice = existingProduct.buybox_winner.price
-      const stockPrice = estimation.price
+      // const existingProduct = products.find(p => p.productID === estimation.asin)
 
-      if (productPrice.value !== stockPrice.value) {
-        price_changed = true
-        dbOps.push(DBQuery(Product.updateOne({ asin: existingProduct.asin }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
-        const productIdx = products.findIndex(p => p.productID === existingProduct.productID)
-        products[productIdx] = {
-          ...existingProduct,
-          buybox_winner: {
-            ...existingProduct.buybox_winner,
-            price: {
-              ...existingProduct.buybox_winner.price,
-              value: stockPrice.value
-            }
-          }
-        }
-      }
+      // const productPrice = existingProduct.buybox_winner ? existingProduct.buybox_winner.price : existingProduct.price
+      // const stockPrice = estimation.price
+
+      // if (existingProduct && productPrice.value !== stockPrice.value) {
+      //   price_changed = true
+      //   dbOps.push(DBQuery(Product.updateOne({ productID: existingProduct.productID }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
+      //   const productIdx = products.findIndex(p => p.productID === existingProduct.productID)
+      //   products[productIdx] = {
+      //     ...existingProduct,
+      //     buybox_winner: {
+      //       ...existingProduct.buybox_winner,
+      //       price: {
+      //         ...existingProduct.buybox_winner.price,
+      //         value: stockPrice.value
+      //       }
+      //     }
+      //   }
+      // }
 
       if (existingRegistry) {
         dbOps.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() })))
@@ -150,9 +151,10 @@ const getShippingCosts = combineResolvers(
 
     for (let i = 0; i < dynamicFeeProducts.length; i++) {
       const p = dynamicFeeProducts[i]
-      const { lb3Vol, ft3Vol, weight, buybox_winner } = p
-      const { quantity: qty } = input.find(i => i.asin === p.asin)
-      totalOrderPrice += buybox_winner.price.value
+      const { lb3Vol, ft3Vol, weight, buybox_winner, price } = p
+      const { quantity: qty } = input.find(i => i.productID === p.productID)
+      let productPrice = buybox_winner && buybox_winner.price ? buybox_winner.price.value : price.value
+      totalOrderPrice += productPrice
       const productFt3Vol = ft3Vol * qty
       const productWeight = weight * qty
       const productLb3Vol = lb3Vol * qty
