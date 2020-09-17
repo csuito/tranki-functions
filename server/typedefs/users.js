@@ -10,5 +10,11 @@ module.exports = `
     viewedProducts: [Product]
     lastLogin: String
     creationDate: String
+    expoPushTokens: [PushDevice!]
+  }
+
+  type PushDevice {
+    token: String!
+    installationID: String!
   }
 `

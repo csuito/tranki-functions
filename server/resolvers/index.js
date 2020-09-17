@@ -1,5 +1,5 @@
 const { orders, order, createOrder, updateOrder, userOrders } = require("./orders")
-const { createUser, updateUser, addUserAddress, updateUserAddress, removeUserAddress, addUserProduct, user, users, activeUsers, changeUserStatus, userExists } = require("./users")
+const { createUser, updateUser, addUserAddress, updateUserAddress, removeUserAddress, addUserProduct, user, users, activeUsers, changeUserStatus, userExists, addExpoToken } = require("./users")
 const { onBoardStripeUser, removeCustomerCard, listCustomerCards } = require('./stripe')
 
 module.exports = {
@@ -34,7 +34,8 @@ module.exports = {
     addUserProduct,
     changeUserStatus,
     onBoardStripeUser,
-    removeCustomerCard
+    removeCustomerCard,
+    addExpoToken
   },
   Address: {
     __resolveType(data, ctx, info) {

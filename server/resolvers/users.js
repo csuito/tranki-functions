@@ -162,5 +162,32 @@ module.exports = {
       } catch (e) {
         return e
       }
-    })
+    }),
+
+  addExpoToken: combineResolvers(
+    isOwner,
+    async (_, { input: { firebaseID, token, installationID } }) => {
+      const query = User.findOne({ firebaseID })
+      const user = await DBQuery(query)
+      try {
+        if (user.expoTokens && user.expoTokens.length > 0) {
+          const existingDevice = user.expoTokens.find(t => t.installationID === installationID)
+          if (existingDevice) {
+            const index = user.expoTokens.findIndex(t => t.installationID === installationID)
+            existingDevice.token = token
+            user.expoTokens[index] = existingDevice
+            await DBQuery(User.updateOne({ firebaseID }, user))
+            return true
+          }
+        }
+        user.expoTokens = user.expoTokens || []
+        user.expoTokens.push({ token, installationID })
+        await DBQuery(User.updateOne({ firebaseID }, user))
+        console.log("Done!")
+        return true
+      } catch (e) {
+        return false
+      }
+    }
+  )
 }

@@ -16,9 +16,7 @@ const DBQuery = async query => {
 
   try {
     const result = await query
-
     await closeDB()
-
     return result
   } catch (err) {
     await closeDB()

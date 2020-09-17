@@ -48,6 +48,7 @@ const mutations = `
     changeUserStatus(input: ChangeUserStatusInput!): String
     onBoardStripeUser(input: StripeOnBoardInput!): StripeCard
     removeCustomerCard(input: CustomerCardInput!): Boolean
+    addExpoToken(input: addExpoTokenInput!): Boolean
   }
 `
 

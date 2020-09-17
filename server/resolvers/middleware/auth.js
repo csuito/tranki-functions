@@ -1,4 +1,11 @@
 module.exports = {
+  /**
+   * Verifies user jwt or partner's 
+   * API key
+   * @param req
+   * @param res
+   * @param next
+   */
   isAuthenticatedRest: async (req, res, next) => {
     const { authorization } = req.headers
     if (!authorization) return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
@@ -24,6 +31,24 @@ module.exports = {
       } catch (e) {
         return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
       }
+    }
+  },
+  /**
+   * Verifies jwt and checks that request comes from resource owner
+   * @param req
+   * @param res
+   * @param next
+   */
+  isOwnerRest: async (req, res, next) => {
+    const { authorization } = req.headers
+    const { firebaseID } = req.body || req.params || req.query
+    const app = require("../../../functions/config/firebase")
+    try {
+      const { user_id } = await app.auth().verifyIdToken(authorization)
+      if (user_id !== firebaseID) return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
+      return next()
+    } catch (e) {
+      return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
     }
   },
   /**
