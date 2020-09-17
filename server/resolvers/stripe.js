@@ -1,7 +1,6 @@
 const { combineResolvers } = require("graphql-resolvers")
-const { isAuthenticated, isOwner } = require("./middleware/auth")
+const { isOwner } = require("./middleware/auth")
 const DBQuery = require("./helpers/dbSession")
-
 
 module.exports = {
   /**
@@ -13,7 +12,9 @@ module.exports = {
       const { card_token, email, firebaseID } = input
       const User = require('../model/users')
       const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
+
       const user = await DBQuery(User.findOne({ firebaseID }))
+
       let stripeCustomer
       if (user && (!user.stripe || !user.stripe.id)) {
         try {
@@ -30,18 +31,19 @@ module.exports = {
           return new Error('Card already attached to user')
         }
       }
+
       try {
-        const { id, brand, last4, country } = await stripe.customers.createSource(
-          stripeCustomer.id,
-          { source: card_token }
-        )
+        const { id, brand, last4, country } = await stripe.customers.createSource(stripeCustomer.id, {
+          source: card_token
+        })
+
         if (id) {
           stripeCustomer.cards.push({ id, brand, last4, token: card_token })
         }
+
         await DBQuery(User.updateOne({ firebaseID }, { $set: { 'stripe': stripeCustomer } }))
 
-        return { card_id: id, type: brand, last4, customer: stripeCustomer.id, country }
-
+        return { card_id: id, brand, last4, customer: stripeCustomer.id, country }
       } catch (e) {
         return new Error('Unable to save new card')
       }
