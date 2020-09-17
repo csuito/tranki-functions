@@ -142,4 +142,10 @@ module.exports = `
     firebaseID: ID!
     customer: String!
   }
+
+  input addExpoTokenInput {
+    firebaseID: ID! @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
+    token: String! @constraint(minLength: 2, maxLength: 100)
+    installationID: String! @constraint(minLength: 2, maxLength: 100)
+  }
 `

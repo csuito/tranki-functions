@@ -20,6 +20,10 @@ const userSchema = new Schema({
   status: { type: String, required: true, default: "active" },
   lastLogin: { type: String, required: true, default: Date.now },
   creationDate: { type: String, required: true, default: Date.now },
+  expoTokens: [{
+    token: { type: String },
+    installationID: { type: String }
+  }],
   stripe: {
     id: { type: String },
     cards: [{
