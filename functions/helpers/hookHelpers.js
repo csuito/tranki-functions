@@ -1,6 +1,7 @@
 const { client } = require("../../client")
 const { requestTypes } = require("../../server/constants")
 const AllSettled = require('promise.allsettled')
+const { sendSlackMessage } = require('../bots/slack')
 
 const isEmpty = (obj) => Object.keys(obj).length === 0 && obj.constructor === Object
 
@@ -196,20 +197,30 @@ const getProductDetails = async (products, query = {}) => {
     let productDetails = []
     // Batching and throttling requests if there are more than 100 products
     if (getProducts.length > 500) {
-      console.log("Batching")
+      console.log("Product Batching")
       const numBatches = Math.ceil(getProducts.length / 250)
       const batches = splitUp(getProducts, numBatches)
       console.log({ numBatches })
       for (let batch of batches) {
-        console.time("batch")
-        console.log("Batch length: ", batch.length)
-        const newProducts = await AllSettled(batch)
-        productDetails = [...productDetails, ...newProducts]
-        await waitFor(2000)
-        console.timeEnd("batch")
+        try {
+          await waitFor(2000)
+          console.time("Product batch")
+          console.log("Batch length: ", batch.length)
+          const newProducts = await AllSettled(batch)
+          productDetails = [...productDetails, ...newProducts]
+          console.timeEnd("Product batch")
+        } catch (err) {
+          // await sendSlackMessage({ collectionName, success: false, error: err })
+          throw new Error(err)
+        }
       }
     } else {
-      productDetails = await AllSettled(getProducts)
+      try {
+        productDetails = await AllSettled(getProducts)
+      } catch (err) {
+        // await sendSlackMessage({ collectionName, success: false, error: err })
+        throw new Error(err)
+      }
     }
 
     productDetails = productDetails
@@ -249,15 +260,26 @@ const getProductDetails = async (products, query = {}) => {
       const variantBatches = splitUp(_allVariants, numBatches)
       console.log({ numBatches })
       for (let batch of variantBatches) {
-        console.time("variantBatch")
-        console.log("Batch length: ", batch.length)
-        const newVariants = await AllSettled(batch)
-        allVariants = [...allVariants, ...newVariants]
-        await waitFor(2000)
-        console.timeEnd("variantBatch")
+        try {
+          await waitFor(2000)
+          console.time("variantBatch")
+          console.log("Batch length: ", batch.length)
+          const newVariants = await AllSettled(batch)
+          allVariants = [...allVariants, ...newVariants]
+          console.timeEnd("variantBatch")
+        } catch (err) {
+          // await sendSlackMessage({ collectionName, success: false, error: err })
+          throw new Error(err)
+        }
+
       }
     } else {
-      allVariants = await AllSettled(_allVariants)
+      try {
+        allVariants = await AllSettled(_allVariants)
+      } catch (err) {
+        throw new Error(err)
+        // await sendSlackMessage({ collectionName, success: false, error: err })
+      }
     }
 
 
@@ -314,6 +336,7 @@ const getProductDetails = async (products, query = {}) => {
     return allProducts
   } catch (err) {
     console.log(err)
+    // await sendSlackMessage({ collectionName, success: false, error: err })
     throw new Error("Unable to retrieve product details")
   }
 }
