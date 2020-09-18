@@ -1,5 +1,6 @@
 module.exports = async (req, res) => {
   console.log("Body: ", JSON.stringify(req.body))
+  const { collection: { name: collectionName } } = req.body
 
   if (!req.query || !req.query.category || !req.query.department) {
     throw new Error("No department or category specified")
@@ -10,6 +11,7 @@ module.exports = async (req, res) => {
   }
 
   const { connectDB, closeDB } = require("./config/db")
+  const { sendSlackMessage } = require('./bots/slack')
 
   try {
     await connectDB()
@@ -53,7 +55,6 @@ module.exports = async (req, res) => {
         const { ft3Vol, weight, lb3Vol } = getShippingInfo(weightSpec, dimensionSpec, 1)
         return { ...p, ft3Vol, lb3Vol, weight }
       })
-
 
     products = products
       .map(p => {
@@ -161,13 +162,13 @@ module.exports = async (req, res) => {
       const allProducts = [...updates, ...inserts]
       await Product.bulkWrite(allProducts)
       console.log("Saved products in DB")
+      await sendSlackMessage({ collectionName, updates: updates.length, inserts: inserts.length, success: true })
     }
     await closeDB()
     return res.status(200).send()
   } catch (err) {
-    console.log(err)
+    await sendSlackMessage({ collectionName, success: false, error: err })
     await closeDB()
-
     return res.status(500).send()
   }
 }

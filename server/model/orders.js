@@ -3,7 +3,6 @@ const { addressSchema, venezuelanAddressSchema } = require("./address")
 
 const product = {
   productID: { type: String, required: true },
-  store: { type: String, required: true },
   supplier: {
     name: { type: String, required: true },
     supplierOrderID: { type: String }
