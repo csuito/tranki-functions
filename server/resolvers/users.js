@@ -121,7 +121,10 @@ module.exports = {
 
       try {
         const query = User.findOne({ firebaseID })
-        return await DBQuery(query)
+        const user = await DBQuery(query)
+        console.log({ user })
+        user.stripeCustomer = user.stripe && user.stripe.id ? user.stripe.id : null
+        return user
       } catch (e) {
         return e
       }

@@ -11,6 +11,7 @@ module.exports = `
     lastLogin: String
     creationDate: String
     expoPushTokens: [PushDevice!]
+    stripeCustomer: String
   }
 
   type PushDevice {
