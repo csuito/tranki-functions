@@ -204,11 +204,11 @@ const getProductDetails = async (products, query = {}) => {
       for (let batch of batches) {
         try {
           await waitFor(2000)
-          console.time("Product batch")
+          console.time("Products")
           console.log("Batch length: ", batch.length)
           const newProducts = await AllSettled(batch)
           productDetails = [...productDetails, ...newProducts]
-          console.timeEnd("Product batch")
+          console.timeEnd("Products")
         } catch (err) {
           // await sendSlackMessage({ collectionName, success: false, error: err })
           throw new Error(err)

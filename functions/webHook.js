@@ -98,7 +98,6 @@ module.exports = async (req, res) => {
         category: req.query.category,
         bestseller: p.bestseller,
         buybox_winner: p.buybox_winner,
-        productID: p.productID,
         parent_asin: p.parent_asin,
         link: p.link,
         brand: p.brand,
@@ -117,13 +116,10 @@ module.exports = async (req, res) => {
       }))
       let updates = []
       if (checkArray(existingProducts)) {
-        await index.saveObjects(algoliaProducts, {
-          autoGenerateObjectIDIfNotExist: true
-        })
+        await index.saveObjects(algoliaProducts, { autoGenerateObjectIDIfNotExist: false })
         console.log(`Updated ${existingProducts.length} products in Algolia`)
         updates = buildUpdateOps(existingProducts)
       }
-
       let inserts = []
       if (checkArray(newProducts)) {
         const algoliaProducts = newProducts.map(p => ({
@@ -151,9 +147,7 @@ module.exports = async (req, res) => {
           lb3Vol: p.lb3Vol,
           weight: p.weight
         }))
-        const { objectIDs } = await index.saveObjects(algoliaProducts, {
-          autoGenerateObjectIDIfNotExist: true
-        })
+        const { objectIDs } = await index.saveObjects(algoliaProducts, { autoGenerateObjectIDIfNotExist: true })
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
         inserts = buildInsertOps(newProducts, objectIDs)
       }
