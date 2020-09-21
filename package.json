@@ -7,10 +7,11 @@
     "start": "env NODE_ENV=local functions-framework --target=$npm_config_func",
     "test": "mocha test --exit",
     "dev": "nodemon index.js",
-    "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs12 --env-vars-file $npm_config_func.env.yaml --trigger-http",
+    "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs12 --env-vars-file $npm_config_func.env.yaml --trigger-http --timeout 540",
     "deploy-hook": "npm run deploy --func=webHook",
     "deploy-api": "npm run deploy --func=api",
-    "deploy-rest": "npm run deploy --func=rest"
+    "deploy-rest": "npm run deploy --func=rest",
+    "deploy-push-server": "npm run deploy --func=push"
   },
   "keywords": [],
   "author": "",
