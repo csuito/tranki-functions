@@ -2,6 +2,7 @@ module.exports = async (req, res) => {
   console.log("Body: ", JSON.stringify(req.body))
   const { collection: { name: collectionName } } = req.body
 
+
   if (!req.query || !req.query.category || !req.query.department) {
     throw new Error("No department or category specified")
   }
@@ -78,9 +79,7 @@ module.exports = async (req, res) => {
       })
 
     console.log(`Products: ${products && products.length > 0 ? products.length : 0}`)
-
     let { existingProducts, newProducts } = await splitProductsByOpType(products)
-
     console.log("Products breakdown:", { existingProducts: existingProducts.length, newProducts: newProducts.length, totalProducts: (existingProducts.length + newProducts.length) })
 
     newProducts = newProducts
