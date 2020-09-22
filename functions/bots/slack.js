@@ -2,11 +2,15 @@ const axios = require('axios').default
 
 module.exports = {
   sendSlackMessage: async ({ collectionName, updates, inserts, success, error }) => {
+    console.log("Sending slack message")
+    console.log({ collectionName, updates, inserts, success, error })
     let emoji = success ? ':white_check_mark:' : ':x:'
-    let payload = success ? {
-      type: "mrkdwn",
-      text: `Sup bois! \n *${collectionName}* - ${emoji} \n _Updates_: ${updates} \n _Inserts_: ${inserts} \n _Total_: ${updates + inserts}`
-    } : {
+    let payload = success ?
+      {
+        type: "mrkdwn",
+        text: `Sup bois! \n *${collectionName}* - ${emoji} \n _Updates_: ${updates} \n _Inserts_: ${inserts} \n _Total_: ${updates + inserts}`
+      } :
+      {
         type: "mrkdwn",
         text: `Oh no! \n *${collectionName}* - ${emoji} \n _Error_: \`\`\`${JSON.stringify(error)}\`\`\``
       }
@@ -20,6 +24,7 @@ module.exports = {
       return { success: true, data: response }
     } catch (e) {
       console.log(e)
+      throw new Error(e)
     }
   }
 }

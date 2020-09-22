@@ -1,5 +1,7 @@
 const { combineResolvers } = require("graphql-resolvers")
 const { isAuthenticated } = require("./middleware/auth")
+const { closeDB, connectDB } = require('../../functions/config/db')
+const { connect } = require("mongoose")
 
 /**
  * Retrieves a product by id
@@ -8,10 +10,10 @@ const { isAuthenticated } = require("./middleware/auth")
 const getCategories = combineResolvers(
   isAuthenticated,
   async (_, { department }) => {
+    await connectDB()
     const Product = require("../model/products")
-    const DBQuery = require("./helpers/dbSession")
     try {
-      const aggr = Product.aggregate([
+      const response = await Product.aggregate([
         { $match: { department: department } },
         {
           $group: {
@@ -21,14 +23,15 @@ const getCategories = combineResolvers(
             }
           }
         }])
-      const response = await DBQuery(aggr)
       let categories = response[0].categories
       const products = categories.map(category =>
-        DBQuery(Product.find({ department, category }).limit(6)))
-      const categoryProdcts = await Promise.all(products)
-      categories = categories.map((name, idx) => ({ name, products: categoryProdcts[idx] }))
+        Product.find({ department, category }).limit(6))
+      const categoryProducts = await Promise.all(products)
+      categories = categories.map((name, idx) => ({ name, products: categoryProducts[idx] }))
+      await closeDB()
       return categories
     } catch (err) {
+      await closeDB()
       throw new Error("Unable to find product in DB")
     }
   })

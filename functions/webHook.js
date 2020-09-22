@@ -2,6 +2,7 @@ module.exports = async (req, res) => {
   console.log("Body: ", JSON.stringify(req.body))
   const { collection: { name: collectionName } } = req.body
 
+
   if (!req.query || !req.query.category || !req.query.department) {
     throw new Error("No department or category specified")
   }
@@ -12,6 +13,7 @@ module.exports = async (req, res) => {
 
   const { connectDB, closeDB } = require("./config/db")
   const { sendSlackMessage } = require('./bots/slack')
+  const algoliaTransform = require('./helpers/algolia-transform')
 
   try {
     await connectDB()
@@ -77,9 +79,7 @@ module.exports = async (req, res) => {
       })
 
     console.log(`Products: ${products && products.length > 0 ? products.length : 0}`)
-
     let { existingProducts, newProducts } = await splitProductsByOpType(products)
-
     console.log("Products breakdown:", { existingProducts: existingProducts.length, newProducts: newProducts.length, totalProducts: (existingProducts.length + newProducts.length) })
 
     newProducts = newProducts
@@ -88,32 +88,7 @@ module.exports = async (req, res) => {
     if (checkArray(existingProducts) || checkArray(newProducts)) {
       const algoliaClient = require("./config/algolia")()
       const index = algoliaClient.initIndex("products")
-      const algoliaProducts = existingProducts.map(p => ({
-        objectID: p.objectID,
-        productID: p.productID,
-        store: p.store,
-        specifications: p.specifications,
-        title: p.title,
-        department: req.query.department,
-        category: req.query.category,
-        bestseller: p.bestseller,
-        buybox_winner: p.buybox_winner,
-        parent_asin: p.parent_asin,
-        link: p.link,
-        brand: p.brand,
-        description: p.description,
-        rating: p.rating,
-        ratings_total: p.ratings_total,
-        main_image: p.main_image,
-        images: p.images,
-        images_count: p.images_count,
-        feature_bullets: p.feature_bullets,
-        has_variants: p.variants && p.variants.length > 0,
-        frequently_bought_together: p.frequently_bought_together,
-        ft3Vol: p.ft3Vol,
-        lb3Vol: p.lb3Vol,
-        weight: p.weight
-      }))
+      const algoliaProducts = existingProducts.map(p => algoliaTransform(p))
       let updates = []
       if (checkArray(existingProducts)) {
         await index.saveObjects(algoliaProducts, { autoGenerateObjectIDIfNotExist: false })
@@ -122,31 +97,7 @@ module.exports = async (req, res) => {
       }
       let inserts = []
       if (checkArray(newProducts)) {
-        const algoliaProducts = newProducts.map(p => ({
-          productID: p.productID,
-          store: p.store,
-          specifications: p.specifications,
-          title: p.title,
-          department: req.query.department,
-          category: req.query.category,
-          bestseller: p.bestseller,
-          buybox_winner: p.buybox_winner,
-          parent_asin: p.parent_asin,
-          link: p.link,
-          brand: p.brand,
-          description: p.description,
-          rating: p.rating,
-          ratings_total: p.ratings_total,
-          main_image: p.main_image,
-          images: p.images,
-          images_count: p.images_count,
-          has_variants: p.variants && p.variants.length > 0,
-          feature_bullets: p.feature_bullets,
-          frequently_bought_together: p.frequently_bought_together,
-          ft3Vol: p.ft3Vol,
-          lb3Vol: p.lb3Vol,
-          weight: p.weight
-        }))
+        const algoliaProducts = newProducts.map(p => algoliaTransform(p, req.query.department, req.query.category))
         const { objectIDs } = await index.saveObjects(algoliaProducts, { autoGenerateObjectIDIfNotExist: true })
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
         inserts = buildInsertOps(newProducts, objectIDs)
@@ -161,6 +112,8 @@ module.exports = async (req, res) => {
     await closeDB()
     return res.status(200).send()
   } catch (err) {
+    console.log({ collectionName })
+    console.log("Main", err)
     await sendSlackMessage({ collectionName, success: false, error: err })
     await closeDB()
     return res.status(500).send()
