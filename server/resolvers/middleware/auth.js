@@ -51,6 +51,7 @@ module.exports = {
       return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
     }
   },
+
   /**
    * Verifies jwt
    * @param args
@@ -99,6 +100,24 @@ module.exports = {
       const { user_id } = await app.auth().verifyIdToken(auth)
       if (user_id !== firebaseID) throw new Error("Unauthorized")
       return skip
+    } catch (e) {
+      return new Error("Unauthorized")
+    }
+  },
+
+  /**
+   * Verifies jwt and checks that request comes from resource owner or admin
+   * @param args
+   * @param ctx
+   */
+  isOwnerOrAdmin: async (_, { userID }, { auth }) => {
+    const app = require("../../../functions/config/firebase")
+    const { skip } = require("graphql-resolvers")
+    try {
+      const { user_id, roles } = await app.auth().verifyIdToken(auth)
+      console.log({ userID, user_id, isOwner: userID === user_id, roles })
+      if (user_id === userID || roles.includes("admin")) return skip
+      else throw new Error("Unauthorized")
     } catch (e) {
       return new Error("Unauthorized")
     }

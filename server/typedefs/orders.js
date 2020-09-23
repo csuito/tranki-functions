@@ -5,7 +5,7 @@ module.exports = `
   }
 
   type OrderProduct {
-    asin: ID!
+    productID: ID!
     price: Float
     qty: Int
     variant: String
