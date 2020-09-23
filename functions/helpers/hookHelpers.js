@@ -414,5 +414,7 @@ module.exports = {
   checkArray,
   getShippingInfo,
   getSpec,
-  getCourierCosts
+  getCourierCosts,
+  splitUp,
+  waitFor
 }
