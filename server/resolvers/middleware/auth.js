@@ -15,11 +15,7 @@ module.exports = {
     const DBQuery = require("../helpers/dbSession")
     if (isAPIKey(authorization)) {
       try {
-        const addCount = Partner.updateOne(
-          { key: authorization },
-          { $inc: { count: 1 } }
-        )
-        await DBQuery(addCount)
+        await DBQuery(Partner.increaseAPICount(authorization))
         return next()
       } catch (e) {
         return res.status(401).json({ message: "Unauthorized", error: "Unauthorized" })
@@ -69,11 +65,7 @@ module.exports = {
 
     if (isAPIKey(auth)) {
       try {
-        const addCount = Partner.updateOne(
-          { key: auth },
-          { $inc: { count: 1 } }
-        )
-        await DBQuery(addCount)
+        await DBQuery(Partner.increaseAPICount(auth))
         return skip
       } catch (e) {
         return new Error("Not authenticated")
