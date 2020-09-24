@@ -7,11 +7,12 @@
     "start": "env NODE_ENV=local functions-framework --target=$npm_config_func",
     "test": "mocha test --exit",
     "dev": "nodemon index.js",
-    "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs12 --env-vars-file $npm_config_func.env.yaml --trigger-http --timeout 540",
+    "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs12 --env-vars-file $npm_config_func.env.yaml --trigger-http",
     "deploy-hook": "npm run deploy --func=webHook",
     "deploy-api": "npm run deploy --func=api",
     "deploy-rest": "npm run deploy --func=rest",
-    "deploy-push-server": "npm run deploy --func=push"
+    "deploy-push-server": "npm run deploy --func=push",
+    "deploy-product-hook": "npm run deploy --func=productHook"
   },
   "keywords": [],
   "author": "",
@@ -21,8 +22,9 @@
     "npm": "6.14.5"
   },
   "dependencies": {
-    "algoliasearch": "^4.3.0",
-    "apollo-server-express": "^2.15.0",
+    "@google-cloud/functions-framework": "^1.6.0",
+    "algoliasearch": "^4.5.1",
+    "apollo-server-express": "^2.18.0",
     "axios": "^0.19.2",
     "expo-server-sdk": "^3.5.1",
     "express": "^4.17.1",
@@ -30,17 +32,16 @@
     "firebase-functions": "^3.7.0",
     "graphql-constraint-directive": "^2.1.0",
     "graphql-resolvers": "^0.4.2",
-    "graphql-tools": "^6.2.2",
-    "mongoose": "^5.9.22",
+    "graphql-tools": "^6.2.3",
+    "mongoose": "^5.10.6",
     "promise.allsettled": "^1.0.2",
-    "stripe": "^8.94.0",
+    "stripe": "^8.97.0",
     "uuid-apikey": "^1.4.6"
   },
   "devDependencies": {
-    "@google-cloud/functions-framework": "^1.6.0",
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
     "easygraphql-tester": "^5.1.6",
-    "mocha": "^8.0.1"
+    "mocha": "^8.1.3"
   }
 }

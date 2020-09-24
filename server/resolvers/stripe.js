@@ -45,7 +45,7 @@ module.exports = {
 
         return { card_id: id, brand, last4, customer: stripeCustomer.id, country }
       } catch (e) {
-        return new Error('Unable to save new card')
+        return new Error(e)
       }
     }),
 
