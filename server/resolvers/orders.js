@@ -1,5 +1,5 @@
 const { combineResolvers } = require("graphql-resolvers")
-const { isOwner, isAdmin, isAuthenticated } = require("./middleware/auth")
+const { isOwnerOrAdmin, isAdmin, isAuthenticated } = require("./middleware/auth")
 const DBQuery = require("./helpers/dbSession")
 
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
     }),
 
   userOrders: combineResolvers(
-    isAdmin,
+    isOwnerOrAdmin,
     async (_, { userID }) => {
       const Order = require("../model/orders")
       try {
