@@ -5,3 +5,5 @@ firebase-config.json
 .vscode
 .env
 .env.*
+.DS_Store
+s-account.json

@@ -328,8 +328,8 @@ const getProductDetails = async (products, query = {}) => {
         frequently_bought_together,
         also_viewed,
         also_bought,
-        category,
-        department,
+        category: category.trim().toLowerCase(),
+        department: department.trim().toLowerCase(),
         bestseller,
         offer
       }))
@@ -414,5 +414,7 @@ module.exports = {
   checkArray,
   getShippingInfo,
   getSpec,
-  getCourierCosts
+  getCourierCosts,
+  splitUp,
+  waitFor
 }

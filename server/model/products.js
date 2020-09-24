@@ -45,6 +45,7 @@ const shortProduct = new Schema({
   title: { type: String },
   image: { type: String },
   images: [image],
+  videos: [image],
   specifications: [attribute],
   link: { type: String },
   main_image: {
@@ -97,6 +98,7 @@ const productSchema = new Schema({
     link: { type: String }
   },
   images: [image],
+  videos: [image],
   images_count: { type: Number },
   summarization_attributes: [summarization_attribute],
   // bestsellers_rank: [bestsellers_rank],
