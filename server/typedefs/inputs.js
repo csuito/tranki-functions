@@ -12,6 +12,8 @@ module.exports = `
 
   input ProductInput {
     productID: String! @constraint(minLength: 10, maxLength: 10, uniqueTypeName: "ID")
+    image: String!
+    title: String!
     price: Float!
     qty: Int! @constraint(min: 1)
     link: String! @constraint(format: "uri")
@@ -22,6 +24,7 @@ module.exports = `
   input AddressInput {
     firstName: String! @constraint(minLength: 2, maxLength: 100)
     lastName: String! @constraint(minLength: 2, maxLength: 100)
+    phoneNumber: String! @constraint(minLength: 9)
     street: String! @constraint(minLength: 2, maxLength: 100)
     houseOrAptNumber: String! @constraint(minLength: 1, maxLength: 100)
     city: String! @constraint(minLength: 2, maxLength: 100)
@@ -91,6 +94,7 @@ module.exports = `
     addressID: String!  @constraint(minLength: 2, maxLength: 100, uniqueTypeName: "ID")
     firstName: String! @constraint(minLength: 2, maxLength: 100)
     lastName: String! @constraint(minLength: 2, maxLength: 100)
+    phoneNumber: String! @constraint(minLength: 9)
     street: String! @constraint(minLength: 2, maxLength: 100)
     houseOrAptNumber: String! @constraint(minLength: 1, maxLength: 100)
     city: String! @constraint(minLength: 2, maxLength: 100)

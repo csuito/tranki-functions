@@ -7,6 +7,8 @@ module.exports = `
   type OrderProduct {
     productID: ID!
     price: Float
+    title: String
+    image: String
     qty: Int
     variant: String
     link: String
@@ -27,6 +29,7 @@ module.exports = `
     _id: ID
     firstName: String
     lastName: String
+    phoneNumber: String
     street: String
     houseOrAptNumber: String
     city: String
@@ -40,6 +43,7 @@ module.exports = `
     _id: ID
     firstName: String
     lastName: String
+    phoneNumber: String
     street: String
     houseOrAptNumber: String
     city: String
@@ -53,6 +57,7 @@ module.exports = `
     _id: ID
     firstName: String
     lastName: String
+    phoneNumber: String
     street: String
     houseOrAptNumber: String
     city: String
