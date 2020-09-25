@@ -63,6 +63,7 @@ module.exports = `
     payment: PaymentInput!
     shipping: ShippingDataInput!
     status: String
+    idemKey: String
   }
 
   input UpdateOrderInput {

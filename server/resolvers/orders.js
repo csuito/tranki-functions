@@ -44,7 +44,11 @@ module.exports = {
     async (_, { input }) => {
       const Order = require("../model/orders")
       try {
-        const { payment: { card, customer }, userID, price } = input
+        const { payment: { card, customer }, userID, price, idemKey } = input
+        let options = {}
+        if (idemKey) {
+          options.idempotencyKey = idemKey
+        }
         const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
         const charge = await stripe.charges.create({
           amount: parseInt((price * 100).toFixed(0), 10),
@@ -52,7 +56,7 @@ module.exports = {
           source: card,
           customer,
           description: userID
-        })
+        }, options)
         if (charge && charge.id) {
           input = { ...input, payment: { txID: charge.id, method: 'Stripe' } }
           const query = Order.create(input)
