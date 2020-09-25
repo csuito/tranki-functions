@@ -55,7 +55,7 @@ module.exports = {
       try {
         const query = User.findOneAndUpdate(
           { firebaseID },
-          { $push: { shippingAddresses: input } },
+          { $addToSet: { shippingAddresses: input } },
           { new: true })
         return await DBQuery(query)
       } catch (e) {
@@ -90,7 +90,6 @@ module.exports = {
       try {
         const getUser = User.findOne({ firebaseID })
         const user = await DBQuery(getUser)
-
         user.shippingAddresses.id(input.addressID).remove()
         await DBQuery(user.save())
         return true
@@ -102,7 +101,6 @@ module.exports = {
   addUserProduct: combineResolvers(
     isOwner,
     async (_, { input }) => {
-
       try {
         const query = User.findOneAndUpdate(
           { firebaseID: input.firebaseID },
@@ -118,7 +116,6 @@ module.exports = {
   user: combineResolvers(
     isOwner,
     async (_, { input: { firebaseID } }) => {
-
       try {
         const query = User.findOne({ firebaseID })
         const user = await DBQuery(query)
@@ -132,7 +129,6 @@ module.exports = {
   users: combineResolvers(
     isAdmin,
     async () => {
-
       try {
         const query = User.find()
         return await DBQuery(query)
