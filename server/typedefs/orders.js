@@ -23,6 +23,8 @@ module.exports = `
   type PaymentData {
     txID: String
     method: String
+    brand: String
+    last4: String
   }
 
   interface BaseAddress {
@@ -94,7 +96,8 @@ module.exports = `
     lastName: String
     email: String
     phoneNumber: String
-    total: Total
+    price: Float
+    cost: Float
     payment: PaymentData
     shipping: ShippingData
     status: String
