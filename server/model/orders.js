@@ -43,7 +43,7 @@ const shipping = new Schema({
   timeline: [timelineObject]
 }, { _id: false })
 
-shipping.path("address").discriminator("VEN", venezuelanAddressSchema)
+shipping.path("address").discriminator("Venezuela", venezuelanAddressSchema)
 
 const orderSchema = new Schema({
   cart: [product],
