@@ -44,7 +44,8 @@ module.exports = {
     async (_, { input }) => {
       const Order = require("../model/orders")
       try {
-        const { payment: { card, customer }, userID, price, idemKey } = input
+        const { payment: { card, customer, last4, brand }, userID, price, idemKey } = input
+
         let options = {}
         if (idemKey) {
           options.idempotencyKey = idemKey
@@ -58,7 +59,7 @@ module.exports = {
           description: userID
         }, options)
         if (charge && charge.id) {
-          input = { ...input, payment: { txID: charge.id, method: 'Stripe' } }
+          input = { ...input, payment: { txID: charge.id, method: 'Stripe', last4, brand } }
           const query = Order.create(input)
           return await DBQuery(query)
         }

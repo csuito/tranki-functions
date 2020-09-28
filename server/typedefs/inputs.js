@@ -43,6 +43,8 @@ module.exports = `
   input PaymentInput {
     card: String! @constraint(maxLength: 100)
     customer: String! @constraint(maxLength: 100)
+    brand: String! @constraint(maxLength: 50)
+    last4: String! @constraint(maxLength: 4)
   }
 
   input ShippingDataInput {
@@ -62,7 +64,7 @@ module.exports = `
     lastName: String! @constraint(minLength: 2, maxLength: 100)
     email: String! @constraint(minLength: 5, format: "email")
     phoneNumber: String! @constraint(minLength: 9)
-    total: TotalInput!
+    price: Float!
     payment: PaymentInput!
     shipping: ShippingDataInput!
     status: String
@@ -77,7 +79,8 @@ module.exports = `
     lastName: String @constraint(minLength: 2, maxLength: 100)
     email: String @constraint(minLength: 5, format: "email")
     phoneNumber: String @constraint(minLength: 9)
-    total: TotalInput
+    price: Float
+    cost: Float
     shipping: ShippingDataInput
     status: String
   }
