@@ -23,6 +23,7 @@ class Client {
       config.params["output"] = "json"
       config.params["include_html"] = false
       config.params["offers_prime"] = true
+      config.params["language"] = "es_US"
       return config
     })
   }
