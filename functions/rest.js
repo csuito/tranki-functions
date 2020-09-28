@@ -15,13 +15,14 @@ app.get('/search', isAuthenticatedRest, async (req, res) => {
   try {
     const response = await client.get("/request", {
       params: { type: requestTypes.SEARCH, search_term: q, page },
-      timeout: 15000
+      timeout: 25000
     })
     if (response && response.data) {
       const { search_results, pagination } = response.data
       return res.status(200).json({ success: true, data: { results: search_results, pagination } })
     }
   } catch (e) {
+    console.log(e)
     return res.status(500).json({ error: "Internal Server Error", message: "Unable to perform search operations. Please contact support" })
   }
 })
