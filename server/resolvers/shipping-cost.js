@@ -4,6 +4,7 @@ const { flatFeeDepartments, requestTypes } = require('../constants')
 const { client } = require('../../client')
 const AllSettled = require('promise.allsettled')
 const { getSpec, getCourierCosts } = require('../../functions/helpers/hookHelpers')
+const { connectDB, closeDB } = require("../../functions/config/db")
 
 
 /**
@@ -20,10 +21,15 @@ const getShippingCosts = combineResolvers(
       return new Error('No asins provided')
     }
 
+    try {
+      await connectDB()
+    } catch (e) {
+      throw new Error('Unable to start DB session')
+    }
+
     // DB
     const Product = require("../model/products")
     const Stock = require("../model/stock")
-    const DBQuery = require("./helpers/dbSession")
 
     // Helpers
     const { numDaysBetween } = require('./helpers/dates-between')
@@ -45,7 +51,7 @@ const getShippingCosts = combineResolvers(
     let price_changed = false
 
     // Fetching products and stock estimations in database
-    let [products, stocks] = await Promise.all([DBQuery(productsQuery), DBQuery(stockQuery)])
+    let [products, stocks] = await Promise.all([productsQuery, stockQuery])
 
     // Adding asin not found in the stock table
     for (asin of asins) {
@@ -130,9 +136,9 @@ const getShippingCosts = combineResolvers(
       // }
 
       if (existingRegistry) {
-        dbOps.push(DBQuery(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() })))
+        dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() }))
       } else {
-        dbOps.push(DBQuery(Stock.create(estimation)))
+        dbOps.push(Stock.create(estimation))
       }
     }
 
@@ -186,6 +192,8 @@ const getShippingCosts = combineResolvers(
     const finalSeaPrice = seaCost / markup
     const airStripeFee = (((finalAirPrice + totalOrderPrice) * 2.9) / 100) + 0.3
     const seaStripeFee = (((finalSeaPrice + totalOrderPrice) * 2.9) / 100) + 0.3
+
+    await closeDB()
 
     return {
       air: finalAirPrice < 15 ? 15 : finalAirPrice,
