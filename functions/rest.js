@@ -45,9 +45,9 @@ app.get('/products/:productID', isAuthenticatedRest, async (req, res) => {
         let { product } = rainForest.data
         const { weightSpec, dimensionSpec } = getSpec(product)
         // Checking if we can calcualte weight and dimensions
-        if (!weightSpec || !dimensionSpec) {
+        if (!weightSpec || !dimensionSpec || !product.buybox_winner) {
           // If not just return the product as it came
-          return res.status(200).json({ success: true, data: product })
+          return res.status(200).json({ success: true, data: { ...product, productID: product.asin } })
         } else {
           // Calcualting weight and dimensions
           const { weight, ft3Vol, lb3Vol } = getShippingInfo(weightSpec, dimensionSpec, 1)

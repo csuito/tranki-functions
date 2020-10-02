@@ -171,6 +171,7 @@ module.exports = {
         if (user.expoTokens && user.expoTokens.length > 0) {
           const existingDevice = user.expoTokens.find(t => t.installationID === installationID)
           if (existingDevice) {
+            if (user.expoTokens[index].token === token) return true
             const index = user.expoTokens.findIndex(t => t.installationID === installationID)
             existingDevice.token = token
             user.expoTokens[index] = existingDevice
