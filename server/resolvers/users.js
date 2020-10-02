@@ -122,7 +122,6 @@ module.exports = {
 
         user.stripeCustomer = user.stripe && user.stripe.id ? user.stripe.id : null
         if (user.stripeCustomer) {
-          console.log('inside if')
           const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
           const cards = await stripe.customers.listSources(user.stripeCustomer, { object: 'card' })
           user.cards = cards.data.map(card => ({ card_id: card.id, brand: card.brand, country: card.country, last4: card.last4, customer: user.stripeCustomer }))
