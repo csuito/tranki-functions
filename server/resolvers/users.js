@@ -121,7 +121,6 @@ module.exports = {
         const user = await DBQuery(query)
 
         user.stripeCustomer = user.stripe && user.stripe.id ? user.stripe.id : null
-        console.log({ stripeCustomer: user.stripeCustomer })
         if (user.stripeCustomer) {
           console.log('inside if')
           const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
