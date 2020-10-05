@@ -1,7 +1,6 @@
 const { client } = require("../../client")
 const { requestTypes } = require("../../server/constants")
 const AllSettled = require('promise.allsettled')
-const { sendSlackMessage } = require('../bots/slack')
 
 const isEmpty = (obj) => Object.keys(obj).length === 0 && obj.constructor === Object
 
@@ -111,7 +110,7 @@ const getSpec = (product) => {
   return { weightSpec, dimensionSpec }
 }
 
-const getShippingInfo = (weightSpec, dimensionSpec, qty, options = {}) => {
+const getShippingInfo = (weightSpec, dimensionSpec, qty = 1, options = {}) => {
   const { minVol = false, minWeight = false } = options
   let weight, dimensions, dimensionUnit, weightUnit, ft3Vol, lb3Vol
   if (dimensionSpec) {
@@ -224,7 +223,7 @@ const getProductDetails = async (products, query = {}) => {
       }
     }
 
-    console.log({ productDetails: productDetails[0].value.data.request_info })
+    // console.log({ productDetails: productDetails[0].value.data })
 
     productDetails = productDetails
       .filter(p => p.status === "fulfilled")
@@ -258,16 +257,17 @@ const getProductDetails = async (products, query = {}) => {
 
     console.log(`Fetch ${productVariants.reduce((p, c) => p + c.variants.length, 0)} variants`)
 
-    if (productVariants.length < 1000) {
-      const _allVariants = productVariants
-        .reduce((p, c) => p.concat(c.variants), [])
-        .map(v => v.asin)
-        .map(asin => {
-          return client.get("/request", {
-            params: { type: requestTypes.PRODUCT, asin },
-            timeout: 350000
-          })
+    const _allVariants = productVariants
+      .reduce((p, c) => p.concat(c.variants), [])
+      .map(v => v.asin)
+      .map(asin => {
+        return client.get("/request", {
+          params: { type: requestTypes.PRODUCT, asin },
+          timeout: 350000
         })
+      })
+
+    if (_allVariants.length < 1000) {
 
       let allVariants = []
       // Batching and throttling requests if there are more than 100 variants
@@ -341,13 +341,7 @@ const getProductDetails = async (products, query = {}) => {
           }
           return result
         })
-    } else {
-      productDetails = productDetails.map(p => {
-        const productVariants = productVariants.find(v => v.parent === p.asin)
-        return variants && variants.length ? { ...p, variants: productVariants.variants } : p
-      })
     }
-
     const allProducts = productDetails.
       map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }) => ({
         ...product,

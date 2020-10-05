@@ -11,7 +11,7 @@ const getDepartments = combineResolvers(
     const Department = require("../model/departments")
     const DBQuery = require("./helpers/dbSession")
     try {
-      const query = Department.find().lean()
+      const query = Department.find({ active: true }).lean()
       return await DBQuery(query)
     } catch (err) {
       throw new Error("Unable to fetch departments")
