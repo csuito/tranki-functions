@@ -12,6 +12,7 @@ module.exports = `
     creationDate: String
     expoPushTokens: [PushDevice!]
     stripeCustomer: String
+    cards: [StripeCard]
   }
 
   type PushDevice {
