@@ -30,17 +30,29 @@ const getProduct = combineResolvers(
         // Once we get a successful response
         if (data && data.product) {
           let { product } = data
-          console.log({ product })
           // Checking if there's price data
-          if (!product || !product.buybox_winner) {
+          if (!product || !(product.buybox_winner || product.more_buying_choices)) {
             throw new Error("Product did not specify buybox_winner")
           }
-          const { buybox_winner } = product
-          if (!(buybox_winner.price || buybox_winner.rrp)) {
-            throw new Error("Product did not specify price")
+
+          const { buybox_winner, more_buying_choices } = product
+
+          if (buybox_winner) {
+            if (!(buybox_winner.price || buybox_winner.rrp)) {
+              throw new Error("Product did not specify price")
+            }
           }
+
+          if (more_buying_choices && more_buying_choices.length > 0) {
+            if (!more_buying_choices[0].price) {
+              throw new Error("Product did not specify price")
+            }
+            product = { ...product, buybox_winner: { price: more_buying_choices[0].price } }
+          }
+
           // Checking for shipping data
           const { weightSpec, dimensionSpec } = getSpec(product)
+          console.log({ specs: product.specifications })
           if (weightSpec && dimensionSpec) {
             const { weight, ft3Vol, lb3Vol } = getShippingInfo(weightSpec, dimensionSpec)
             if (weight && ft3Vol && lb3Vol) {
