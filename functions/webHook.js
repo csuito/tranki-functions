@@ -59,7 +59,6 @@ module.exports = async (req, res) => {
         return { ...p, ft3Vol, lb3Vol, weight }
       })
 
-    console.log({ productsLength: products.length })
 
     products = products
       .map(p => {

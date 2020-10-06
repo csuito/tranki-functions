@@ -20,7 +20,8 @@
       const objectIDS = allAlgoliaProducts
         .filter(a => a.department === "moda para ninos")
         .map(a => a.objectID)
-      await index.deleteObjects(objectIDS)
+      console.log({ objectIDS: objectIDS.length })
+      // await index.deleteObjects(objectIDS)
     }).catch(e => {
       console.log(e)
     })

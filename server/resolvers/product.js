@@ -4,6 +4,7 @@ const { getSpec, getShippingInfo, buildInsertOps } = require('../../functions/he
 const algoliaTransform = require('../../functions/helpers/algolia-transform')
 const { requestTypes } = require('../constants')
 const { client } = require("../../client")
+const AllSettled = require('promise.allsettled')
 
 /**
  * Retrieves a product by id
@@ -29,6 +30,7 @@ const getProduct = combineResolvers(
         // Once we get a successful response
         if (data && data.product) {
           let { product } = data
+          console.log({ product })
           // Checking if there's price data
           if (!product || !product.buybox_winner) {
             throw new Error("Product did not specify buybox_winner")
@@ -49,6 +51,36 @@ const getProduct = combineResolvers(
               // Saving in algolia
               const { objectID } = await index.saveObject(algoliaProduct, { autoGenerateObjectIDIfNotExist: true })
               product = { ...product, objectID }
+
+              if (product.variants && product.variants.length) {
+                const variantASINS = product.variants.map(v => v.asin)
+                const _allVariants = variantASINS.map(asin => client.get("/request", {
+                  params: { type: requestTypes.PRODUCT, asin, language: 'es_US' },
+                  timeout: 350000
+                }))
+                console.log("Variants size", _allVariants.length)
+                let allVariants = await AllSettled(_allVariants)
+                allVariants = allVariants
+                  .filter(v => v.status === "fulfilled")
+                  .map(v => v.value)
+                  .filter(v => v.data
+                    && v.data.product
+                    && v.data.product.buybox_winner
+                    && (v.data.product.buybox_winner.price || v.data.product.buybox_winner.rrp)
+                    && (v.data.product.main_image || (v.data.product.images && v.data.product.images.length > 0)))
+                  .map(v => v.data.product)
+                  .map(v => {
+                    const { weightSpec, dimensionSpec } = getSpec(v)
+                    if (!weightSpec || !dimensionSpec) {
+                      return { ...v, weight, ft3Vol, lb3Vol }
+                    } else {
+                      const { weight, ft3Vol, lb3Vol } = getShippingInfo(weightSpec, dimensionSpec)
+                      return { ...v, weight, ft3Vol, lb3Vol }
+                    }
+                  })
+                product.variants = allVariants
+              }
+
               const inserts = buildInsertOps([product], [objectID])
               // Saving on DB
               await DBQuery(Product.bulkWrite(inserts))
@@ -59,9 +91,11 @@ const getProduct = combineResolvers(
       } else {
         // If the product is in the DB and a variant was specified
         if (variantID) {
+
           const variantIndex = dbProduct.variants
             .map(v => v.asin)
             .indexOf(variantID)
+
           if (variantIndex !== -1) {
             const variant = dbProduct.variants[variantIndex]
             const { weight, ft3Vol, lb3Vol, buybox_winner } = variant
@@ -76,6 +110,7 @@ const getProduct = combineResolvers(
               })
               // Once we obtain data from rainforest
               if (data && data.product) {
+                console.log("Got data!")
                 let { product } = data
                 // Checking for pricing data
                 if (!product || !product.buybox_winner) {
@@ -99,7 +134,7 @@ const getProduct = combineResolvers(
                 } else {
                   product = { ...product, weight: dbProduct.weight, ft3Vol: dbProduct.ft3Vol, lb3Vol: dbProduct.lb3Vol }
                 }
-                dbProduct.variants[variantIndex] = product
+                dbProduct.variants[variantIndex] = { ...product, title: variant.title }
                 // Updating parent product
                 await DBQuery(Product.updateOne({ productID }, dbProduct))
                 return dbProduct
