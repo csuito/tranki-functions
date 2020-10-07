@@ -1,5 +1,4 @@
 (async () => {
-
   require('dotenv').config()
   const algoliaClient = require("../config/algolia")()
   let allAlgoliaProducts = []
@@ -13,6 +12,7 @@
       }))
       allAlgoliaProducts = [...allAlgoliaProducts, ...products]
     }
+
     index.browseObjects({
       batch: callback,
       query: 'moda para ninos',
@@ -25,8 +25,8 @@
     }).catch(e => {
       console.log(e)
     })
+
   } catch (e) {
     console.log(e)
   }
-
-})();
+})()
