@@ -119,8 +119,7 @@ module.exports = {
       try {
         const query = User.findOne({ firebaseID }).lean()
         const user = await DBQuery(query)
-
-        user.stripeCustomer = user.stripe && user.stripe.id ? user.stripe.id : null
+        user.stripeCustomer = user && user.stripe && user.stripe.id ? user.stripe.id : null
         if (user.stripeCustomer) {
           const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
           const cards = await stripe.customers.listSources(user.stripeCustomer, { object: 'card' })
