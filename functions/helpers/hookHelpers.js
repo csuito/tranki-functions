@@ -1,7 +1,6 @@
 const { client } = require("../../client")
 const { requestTypes } = require("../../server/constants")
 const AllSettled = require('promise.allsettled')
-const { sendSlackMessage } = require('../bots/slack')
 
 const isEmpty = (obj) => Object.keys(obj).length === 0 && obj.constructor === Object
 
@@ -111,7 +110,7 @@ const getSpec = (product) => {
   return { weightSpec, dimensionSpec }
 }
 
-const getShippingInfo = (weightSpec, dimensionSpec, qty, options = {}) => {
+const getShippingInfo = (weightSpec, dimensionSpec, qty = 1, options = {}) => {
   const { minVol = false, minWeight = false } = options
   let weight, dimensions, dimensionUnit, weightUnit, ft3Vol, lb3Vol
   if (dimensionSpec) {
@@ -192,6 +191,7 @@ const getProductDetails = async (products, query = {}) => {
     params: { type: requestTypes.PRODUCT, asin, language: 'es_US' },
     timeout: 350000
   }))
+
   const { bestseller = false, department = "", category = "", offer = false } = query
   try {
     let productDetails = []
@@ -223,10 +223,26 @@ const getProductDetails = async (products, query = {}) => {
       }
     }
 
+    // console.log({ productDetails: productDetails[0].value.data })
+
     productDetails = productDetails
       .filter(p => p.status === "fulfilled")
       .map(p => p.value)
-      .filter(p => p.data && p.data.product && p.data.product.buybox_winner)
+      .filter(p =>
+        p.data
+        && p.data.product
+        && p.data.product.buybox_winner
+        && (p.data.product.buybox_winner.price || p.data.product.buybox_winner.rrp)
+        && (p.data.product.main_image || (p.data.product.images && p.data.product.images.length > 0)))
+      .map(p => {
+        let variants = p.variants
+        if (variants && variants.length > 0) {
+          variants = variants.filter(v => (v.images && v.images.length > 0) || v.main_image)
+          return { ...p, variants }
+        } else {
+          return p
+        }
+      })
 
 
     const productVariants = productDetails
@@ -235,10 +251,9 @@ const getProductDetails = async (products, query = {}) => {
         return product
           && product.variants
           && product.variants.length > 0
-          ? { variants: product.variants, parent: product.asin } : {}
+          ? { variants: product.variants.flat(), parent: product.asin } : {}
       })
-      .filter(p => p.variants && p.variants.length > 0 ?
-        p.variants.filter(v => !v || !v.images || !v.price).length > 0 : false)
+      .filter(p => p.variants && p.variants.length > 0)
 
     console.log(`Fetch ${productVariants.reduce((p, c) => p + c.variants.length, 0)} variants`)
 
@@ -252,76 +267,81 @@ const getProductDetails = async (products, query = {}) => {
         })
       })
 
-    let allVariants = []
-    // Batching and throttling requests if there are more than 100 variants
-    if (_allVariants.length > 500) {
-      console.log("Batching variants")
-      const numBatches = Math.ceil(_allVariants.length / 250)
-      const variantBatches = splitUp(_allVariants, numBatches)
-      console.log({ numBatches })
-      for (let batch of variantBatches) {
+    if (_allVariants.length < 1000) {
+
+      let allVariants = []
+      // Batching and throttling requests if there are more than 100 variants
+      if (_allVariants.length > 500) {
+        console.log("Batching variants")
+        const numBatches = Math.ceil(_allVariants.length / 250)
+        const variantBatches = splitUp(_allVariants, numBatches)
+        console.log({ numBatches })
+        for (let batch of variantBatches) {
+          try {
+            await waitFor(2000)
+            console.time("variantBatch")
+            console.log("Batch length: ", batch.length)
+            const newVariants = await AllSettled(batch)
+            allVariants = [...allVariants, ...newVariants]
+            console.timeEnd("variantBatch")
+          } catch (err) {
+            // await sendSlackMessage({ collectionName, success: false, error: err })
+            throw new Error(err)
+          }
+
+        }
+      } else {
         try {
-          await waitFor(2000)
-          console.time("variantBatch")
-          console.log("Batch length: ", batch.length)
-          const newVariants = await AllSettled(batch)
-          allVariants = [...allVariants, ...newVariants]
-          console.timeEnd("variantBatch")
+          allVariants = await AllSettled(_allVariants)
         } catch (err) {
-          // await sendSlackMessage({ collectionName, success: false, error: err })
           throw new Error(err)
+          // await sendSlackMessage({ collectionName, success: false, error: err })
         }
+      }
 
-      }
-    } else {
-      try {
-        allVariants = await AllSettled(_allVariants)
-      } catch (err) {
-        throw new Error(err)
-        // await sendSlackMessage({ collectionName, success: false, error: err })
-      }
+      allVariants = allVariants
+        .filter(v => v.status === "fulfilled")
+        .map(v => v.value)
+        .filter(v => v.data
+          && v.data.product
+          && v.data.product.buybox_winner
+          && (v.data.product.buybox_winner.price || v.data.product.buybox_winner.rrp)
+          && (v.data.product.main_image || (v.data.product.images && v.data.product.images.length > 0)))
+
+      productDetails = productDetails
+        .map(p => {
+          const { product } = p.data
+          let pVariants = productVariants
+            .find(v => product.asin === v.parent)
+          if (pVariants) {
+            pVariants = pVariants.variants
+              .map(v => { return v && v.asin ? { ...allVariants.find(av => av.data.request_parameters.asin === v.asin), title: v.title, link: v.link } : {} })
+              .map(v => {
+                if (v && v.data && v.data.product && !isEmpty(v.data.product)) {
+                  const variant = v.data.product
+                  const title = v.title
+                  const link = v.link
+                  const price = variant.buybox_winner
+                  const attributes = variant.attributes && variant.attributes.length > 0 ? variant.attributes : false
+                  const specifications = variant.specifications && variant.specifications.length > 0 ? variant.specifications : false
+                  const images = variant.images && variant.images.length > 0 ? variant.images : false
+                  return !isEmpty(variant) && price && images && attributes && specifications ? ({
+                    title, link, price: variant.price || variant.buybox_winner.price,
+                    specifications,
+                    // dimensions: { name: "size", value: variant.dimensions },
+                    asin: variant.asin, productID: variant.asin, image: variant.image, images: variant.images, attributes: variant.attributes
+                  }) : false
+                }
+                return false
+              })
+              .filter(v => v && v.price && v.images && v.images.length > 0 && v.link && v.attributes && v.attributes.length > 0)
+          }
+          const result = {
+            ...p, data: { ...p.data, product: { ...product, variants: pVariants } }
+          }
+          return result
+        })
     }
-
-
-    allVariants = allVariants
-      .filter(v => v.status === "fulfilled")
-      .map(v => v.value)
-      .filter(v => v.data && v.data.product && v.data.product.buybox_winner)
-
-    productDetails = productDetails
-      .map(p => {
-        const { product } = p.data
-        let pVariants = productVariants
-          .find(v => product.asin === v.parent)
-        if (pVariants) {
-          pVariants = pVariants.variants
-            .map(v => { return v && v.asin ? { ...allVariants.find(av => av.data.request_parameters.asin === v.asin), title: v.title, link: v.link } : {} })
-            .map(v => {
-              if (v && v.data && v.data.product && !isEmpty(v.data.product)) {
-                const variant = v.data.product
-                const title = v.title
-                const link = v.link
-                const price = variant.buybox_winner
-                const attributes = variant.attributes && variant.attributes.length > 0 ? variant.attributes : false
-                const specifications = variant.specifications && variant.specifications.length > 0 ? variant.specifications : false
-                const images = variant.images && variant.images.length > 0 ? variant.images : false
-                return !isEmpty(variant) && price && images && attributes && specifications ? ({
-                  title, link, price: variant.price || variant.buybox_winner.price,
-                  specifications,
-                  // dimensions: { name: "size", value: variant.dimensions },
-                  asin: variant.asin, productID: variant.asin, image: variant.image, images: variant.images, attributes: variant.attributes
-                }) : false
-              }
-              return false
-            })
-            .filter(v => v && v.price && v.images && v.images.length > 0 && v.link && v.attributes && v.attributes.length > 0)
-        }
-        const result = {
-          ...p, data: { ...p.data, product: { ...product, variants: pVariants } }
-        }
-        return result
-      })
-
     const allProducts = productDetails.
       map(({ data: { product, frequently_bought_together, also_viewed, also_bought } }) => ({
         ...product,

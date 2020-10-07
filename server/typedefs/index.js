@@ -14,7 +14,7 @@ const shippingCostSchema = require('./shipping-cost')
 
 const queries = `
   type Query {
-    product(productID: ID!): Product
+    product(productID: ID! variantID: String): Product
     users: [User]
     userExists(email: String firebaseID: String phoneNumber: String): Boolean!
     orders: [Order]

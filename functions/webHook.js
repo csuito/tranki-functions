@@ -47,6 +47,7 @@ module.exports = async (req, res) => {
     console.log(`Results preprocessing done - ready to get ${productCodes && productCodes.length ? productCodes.length : 0} product details`)
 
     let products = await getProductDetails(productCodes, req.query)
+
     products = products
       .filter(p => {
         const { weightSpec, dimensionSpec } = getSpec(p)
@@ -57,6 +58,7 @@ module.exports = async (req, res) => {
         const { ft3Vol, weight, lb3Vol } = getShippingInfo(weightSpec, dimensionSpec, 1)
         return { ...p, ft3Vol, lb3Vol, weight }
       })
+
 
     products = products
       .map(p => {
@@ -85,23 +87,31 @@ module.exports = async (req, res) => {
     newProducts = newProducts
       .map(p => ({ ...p, productID: p.asin, store: "Amazon" }))
 
+    console.log({ newProduct: newProducts[0] })
+
     if (checkArray(existingProducts) || checkArray(newProducts)) {
+      console.log("Checking arrays")
       const algoliaClient = require("./config/algolia")()
       const index = algoliaClient.initIndex("products")
       const algoliaProducts = existingProducts.map(p => algoliaTransform(p))
       let updates = []
       if (checkArray(existingProducts)) {
+        console.log("Existing products")
         await index.saveObjects(algoliaProducts, { autoGenerateObjectIDIfNotExist: false })
         console.log(`Updated ${existingProducts.length} products in Algolia`)
         updates = buildUpdateOps(existingProducts)
       }
       let inserts = []
       if (checkArray(newProducts)) {
+        console.log("New products")
         const algoliaProducts = newProducts.map(p => algoliaTransform(p, req.query.department, req.query.category))
+        console.log("Algolia products built!")
         const { objectIDs } = await index.saveObjects(algoliaProducts, { autoGenerateObjectIDIfNotExist: true })
+        console.log({ objectIDs })
         console.log(`Saved ${objectIDs.length} new products in Algolia`)
         inserts = buildInsertOps(newProducts, objectIDs)
       }
+      console.log("Saving!")
       const Product = require("../server/model/products")
       console.log("Ready to execute DB operations:", { inserts: inserts.length, updates: updates.length, totalOperations: updates.length + inserts.length })
       const allProducts = [...updates, ...inserts]
