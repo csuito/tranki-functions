@@ -16,4 +16,4 @@
     console.log({ allAlgoliaProducts: allAlgoliaProducts[0] })
     await index.saveObjects(allAlgoliaProducts, { autoGenerateObjectIDIfNotExist: false })
   })
-})();
+})()

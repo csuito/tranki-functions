@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "env NODE_ENV=local functions-framework --target=$npm_config_func",
+    "start": "env NODE_ENV=local BIND_IP=0.0.0.0 functions-framework --target=$npm_config_func ",
     "test": "mocha test --exit",
     "dev": "nodemon index.js",
     "deploy": "gcloud functions deploy $npm_config_func --runtime nodejs12 --env-vars-file $npm_config_func.env.yaml --trigger-http",
@@ -22,7 +22,7 @@
     "npm": "6.14.5"
   },
   "dependencies": {
-    "@google-cloud/functions-framework": "^1.6.0",
+    "@google-cloud/functions-framework": "^1.7.1",
     "algoliasearch": "^4.5.1",
     "apollo-server-express": "^2.18.0",
     "axios": "^0.19.2",
