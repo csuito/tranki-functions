@@ -10,6 +10,7 @@ app.post('/', /*Auth required */ async (req, res) => {
   const { Expo } = require('expo-server-sdk')
   let expo = new Expo()
   const user = await DBQuery(User.findOne({ firebaseID }))
+  let messages = []
   if (user.expoTokens && user.expoTokens.length > 0) {
     const tokens = user.expoTokens.map(t => t.token)
     for (let token of tokens) {
@@ -17,13 +18,24 @@ app.post('/', /*Auth required */ async (req, res) => {
         console.error(`Push token ${pushToken} is not a valid Expo push token`)
         continue
       }
-      await expo.sendPushNotificationsAsync({
+      messages.push({
         to: token,
         sound: 'default',
         title,
         body
       })
     }
+    let chunks = expo.chunkPushNotifications(messages)
+    // let tickets = []
+    for (let chunk of chunks) {
+      try {
+        await expo.sendPushNotificationsAsync(chunk)
+        // tickets.push(...ticketChunk)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+    return res.status(200).json({ success: true })
   }
 })
 
@@ -55,12 +67,13 @@ app.post('/all', /*Auth required */ async (req, res) => {
   // let tickets = []
   for (let chunk of chunks) {
     try {
-      let ticketChunk = await expo.sendPushNotificationsAsync(chunk)
+      await expo.sendPushNotificationsAsync(chunk)
       // tickets.push(...ticketChunk)
     } catch (error) {
       console.error(error)
     }
   }
+  return res.status(200).json({ success: true })
 })
 
 module.exports = app
