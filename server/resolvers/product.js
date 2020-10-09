@@ -56,7 +56,7 @@ const getProduct = combineResolvers(
           if (weightSpec && dimensionSpec) {
             const { weight, ft3Vol, lb3Vol } = getShippingInfo(weightSpec, dimensionSpec)
             if (weight && ft3Vol && lb3Vol) {
-              product = { ...product, productID: product.asin, store: "Amazon", weight, ft3Vol, lb3Vol }
+              product = { ...product, productID: product.asin, store: "Amazon", weight, ft3Vol, lb3Vol, department: "tranki", category: "populares" }
               // Tranforming product to be saved in algolia
               const algoliaProduct = algoliaTransform(product, "tranki", "populares")
               const index = algoliaClient.initIndex("products")
