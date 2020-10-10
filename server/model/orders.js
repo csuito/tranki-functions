@@ -29,7 +29,7 @@ const payment = {
 
 const timelineObject = {
   status: { type: String, required: true, default: "unfulfilled" },
-  date: { type: String, required: true, default: Date.now }
+  date: { type: Date, required: true, default: Date.now }
 }
 
 const shipping = new Schema({
