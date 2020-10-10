@@ -37,6 +37,7 @@ app.post('/', /*Auth required */ async (req, res) => {
     }
     return res.status(200).json({ success: true })
   }
+  return res.status(204).json({ success: true, message: "No push tokens found" })
 })
 
 app.post('/all', /*Auth required */ async (req, res) => {
