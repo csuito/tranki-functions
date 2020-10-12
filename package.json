@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^1.7.1",
+    "@sendgrid/mail": "^7.2.6",
     "algoliasearch": "^4.5.1",
     "apollo-server-express": "^2.18.0",
     "axios": "^0.19.2",

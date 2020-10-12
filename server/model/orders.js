@@ -48,6 +48,7 @@ shipping.path("address").discriminator("Venezuela", venezuelanAddressSchema)
 const orderSchema = new Schema({
   cart: [product],
   userID: { type: String, required: true },
+  locator: { type: String },
   email: { type: String, required: true },
   phoneNumber: { type: String, required: true },
   price: { type: Number, required: true },
@@ -57,6 +58,11 @@ const orderSchema = new Schema({
   status: { type: String, required: true, default: "unfulfilled" },
   creationDate: { type: Date, required: true, default: Date.now },
   updatedOn: { type: Date, required: true, default: Date.now }
+})
+
+orderSchema.pre('save', function (next) {
+  this.locator = `${this._id}`.substr(-5)
+  next()
 })
 
 module.exports = model("Order", orderSchema)
