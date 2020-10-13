@@ -12,23 +12,25 @@ module.exports = {
       if (phoneNumber) queryParams.phoneNumber = phoneNumber
       const query = User.findOne(queryParams)
       const user = await DBQuery(query)
-      if (user) {
-        return true
-      } else {
-        return false
-      }
+      if (user) { return true }
+      else { return false }
     } catch (e) {
       throw new Error(e)
     }
   },
 
   createUser: async (_, { input }) => {
+    let user
     try {
+      const { sendWelcomeMessage } = require('./services/sendgrid')
       const query = User.create(input)
-      return await DBQuery(query)
+      user = await DBQuery(query)
     } catch (e) {
       return e
     }
+    const { firstName, email } = user
+    await sendWelcomeMessage({ firstName, email })
+    return user
   },
 
   updateUser: combineResolvers(

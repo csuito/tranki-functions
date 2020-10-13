@@ -114,27 +114,6 @@ const getShippingCosts = combineResolvers(
         in_stock.push(estimation.asin)
       }
       const existingRegistry = stocks.find(s => s.asin === estimation.asin)
-      // const existingProduct = products.find(p => p.productID === estimation.asin)
-
-      // const productPrice = existingProduct.buybox_winner ? existingProduct.buybox_winner.price : existingProduct.price
-      // const stockPrice = estimation.price
-
-      // if (existingProduct && productPrice.value !== stockPrice.value) {
-      //   price_changed = true
-      //   dbOps.push(DBQuery(Product.updateOne({ productID: existingProduct.productID }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
-      //   const productIdx = products.findIndex(p => p.productID === existingProduct.productID)
-      //   products[productIdx] = {
-      //     ...existingProduct,
-      //     buybox_winner: {
-      //       ...existingProduct.buybox_winner,
-      //       price: {
-      //         ...existingProduct.buybox_winner.price,
-      //         value: stockPrice.value
-      //       }
-      //     }
-      //   }
-      // }
-
       if (existingRegistry) {
         dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() }))
       } else {

@@ -43,9 +43,11 @@ module.exports = {
     isAuthenticated,
     async (_, { input }) => {
       const Order = require("../model/orders")
+      const { sendOrderConfirmation } = require('./services/sendgrid')
       try {
-        const { payment: { card, customer, last4, brand }, userID, price, idemKey } = input
+        const { payment: { card, customer, last4, brand }, userID, email, price, idemKey, cart, shipping: { total: shippingCost } } = input
 
+        // Stripe payment
         let options = {}
         if (idemKey) {
           options.idempotencyKey = idemKey
@@ -58,10 +60,21 @@ module.exports = {
           customer,
           description: userID
         }, options)
+        // If payment was successful we proceed with order creation and email notifications
         if (charge && charge.id) {
+          // Adding stripe info to order payload
           input = { ...input, payment: { txID: charge.id, method: 'Stripe', last4, brand } }
+
+          // Saving order to DB
           const query = Order.create(input)
-          return await DBQuery(query)
+
+          // Sending order completed email
+          const order = await DBQuery(query)
+          const { locator } = order
+          const stripeFee = (((price) * 2.9) / 100) + 0.3
+          const subTotal = price - (stripeFee + shippingCost)
+          await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost, total: price, stripeFee })
+          return order
         }
         return new Error('Unable to process payment')
       } catch (e) {
