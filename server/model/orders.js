@@ -61,7 +61,8 @@ const orderSchema = new Schema({
 })
 
 orderSchema.pre('save', function (next) {
-  this.locator = `${this._id}`.substr(-5)
+  if (!this.locator)
+    this.locator = `${this._id}`.substr(-5)
   next()
 })
 
