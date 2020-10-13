@@ -30,7 +30,7 @@ module.exports = {
   /**
    * Send email order update
    */
-  sendOrderConfirmation: async ({ email, locator, cart, subTotal, shippingCost, total }) => {
+  sendOrderConfirmation: async ({ email, locator, cart, subTotal, shippingCost, total, stripeFee }) => {
     const emailID = process.env.ORDER_UPDATE || "d-e825797c82434fb3b7bde6541b822bfb"
     const qty = cart.reduce((count, product) => count + product.qty, 0)
     const msg = {
@@ -44,6 +44,7 @@ module.exports = {
         cart,
         shippingCost,
         subTotal,
+        stripeFee,
         total,
         qty
       }

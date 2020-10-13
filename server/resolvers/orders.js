@@ -73,7 +73,7 @@ module.exports = {
           const { locator } = order
           const stripeFee = (((price) * 2.9) / 100) + 0.3
           const subTotal = price - (stripeFee + shippingCost)
-          await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost, total: price })
+          await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost, total: price, stripeFee })
           return order
         }
         return new Error('Unable to process payment')
