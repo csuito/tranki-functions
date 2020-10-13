@@ -12,7 +12,8 @@ module.exports = {
     const emailID = process.env.WELCOME_EMAIL || "d-dd892e2c814041c0a338b398ad68708b"
     const msg = {
       to: email,
-      from: 'ventas@tranki.app',
+      from: 'contacto@tranki.app',
+      fromname: 'Equipo Tranki',
       subject: '¡Bienvenido/a!',
       templateId: emailID,
       dynamicTemplateData: {
@@ -34,7 +35,8 @@ module.exports = {
     const qty = cart.reduce((count, product) => count + product.qty, 0)
     const msg = {
       to: email,
-      from: 'henryollh205@gmail.com',
+      from: 'contacto@tranki.app',
+      fromname: 'Equipo Tranki',
       subject: 'Tu orden ha sido actualizada',
       templateId: emailID,
       dynamicTemplateData: {
