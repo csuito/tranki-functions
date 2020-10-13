@@ -1,5 +1,5 @@
 const { combineResolvers } = require("graphql-resolvers")
-const { isOwnerOrAdmin, isAdmin, isAuthenticated } = require("./middleware/auth")
+const { isOwnerOrAdmin, isAdmin, isAuthenticated, isOwner } = require("./middleware/auth")
 const DBQuery = require("./helpers/dbSession")
 
 module.exports = {
@@ -93,4 +93,18 @@ module.exports = {
         return e
       }
     }),
+
+  cancelOrder: combineResolvers(
+    isOwner,
+    async (_, { input }) => {
+      const Order = require("../model/orders")
+      const { orderID } = input
+      try {
+        const query = Order.findOneAndUpdate({ _id: orderID }, { $set: { status: "cancelled" } })
+        await DBQuery(query)
+        return true
+      } catch (e) {
+        return false
+      }
+    })
 }

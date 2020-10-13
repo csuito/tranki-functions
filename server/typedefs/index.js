@@ -38,6 +38,7 @@ const queries = `
 const mutations = `
     type Mutation {
     createOrder(input: CreateOrderInput!): Order
+    cancelOrder(input: CancelOrderInput!): Boolean
     updateOrder(input: UpdateOrderInput!): Order
     createUser(input: CreateUserInput!): User
     updateUser(input: UpdateUserInput!): User
