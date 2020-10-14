@@ -103,5 +103,6 @@ module.exports = `
     status: String
     creationDate: String
     updatedOn: String
+    locator: String
   }
 `

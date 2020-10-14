@@ -85,12 +85,13 @@ module.exports = {
    * @param args
    * @param ctx
    */
-  isOwner: async (_, { input: { firebaseID } }, { auth }) => {
+  isOwner: async (_, { input: { firebaseID, userID } }, { auth }) => {
+    let id = firebaseID || userID
     const app = require("../../../functions/config/firebase")
     const { skip } = require("graphql-resolvers")
     try {
       const { user_id } = await app.auth().verifyIdToken(auth)
-      if (user_id !== firebaseID) throw new Error("Unauthorized")
+      if (user_id !== id) throw new Error("Unauthorized")
       return skip
     } catch (e) {
       return new Error("Unauthorized")

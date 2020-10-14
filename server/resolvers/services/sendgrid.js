@@ -42,10 +42,10 @@ module.exports = {
       dynamicTemplateData: {
         orderID: locator,
         cart,
-        shippingCost,
-        subTotal,
-        stripeFee,
-        total,
+        shippingCost: parseFloat(shippingCost).toFixed(2),
+        subTotal: parseFloat(subTotal).toFixed(2),
+        stripeFee: parseFloat(stripeFee).toFixed(2),
+        total: parseFloat(total).toFixed(2),
         qty
       }
     }
