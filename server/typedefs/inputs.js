@@ -45,6 +45,7 @@ module.exports = `
     customer: String! @constraint(maxLength: 100)
     brand: String! @constraint(maxLength: 50)
     last4: String! @constraint(maxLength: 4)
+    fee: Float! 
   }
 
   input ShippingDataInput {
