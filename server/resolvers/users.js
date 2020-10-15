@@ -20,9 +20,9 @@ module.exports = {
   },
 
   createUser: async (_, { input }) => {
+    const { sendWelcomeMessage } = require('./services/sendgrid')
     let user
     try {
-      const { sendWelcomeMessage } = require('./services/sendgrid')
       const query = User.create(input)
       user = await DBQuery(query)
     } catch (e) {
