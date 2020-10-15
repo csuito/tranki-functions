@@ -24,7 +24,7 @@ module.exports = {
       await sendgrid.send(msg)
       return { success: true }
     } catch (e) {
-      throw new Error({ success: false })
+      return { success: false }
     }
   },
   /**
