@@ -78,7 +78,10 @@ function waitFor(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-
+/**
+ * Returns product weight and dimensions specifications
+ * @param {Object} product 
+ */
 const getSpec = (product) => {
   if (!product || !product.specifications || product.specifications.length === 0) {
     return { weightSpec: null, dimensionSpec: null }
@@ -110,6 +113,13 @@ const getSpec = (product) => {
   return { weightSpec, dimensionSpec }
 }
 
+/**
+ * Returns product weight and dimensions
+ * @param {Object} weightSpec 
+ * @param {Object} dimensionSpec 
+ * @param {Number} qty 
+ * @param {Object} options 
+ */
 const getShippingInfo = (weightSpec, dimensionSpec, qty = 1, options = {}) => {
   const { minVol = false, minWeight = false } = options
   let weight, dimensions, dimensionUnit, weightUnit, ft3Vol, lb3Vol
@@ -155,6 +165,16 @@ const getShippingInfo = (weightSpec, dimensionSpec, qty = 1, options = {}) => {
   }
 }
 
+/**
+ * Returns courier price information based
+ * on weight, volume and dimensions
+ * @param {Object} param0
+ * @param {Number} lb3Vol
+ * @param {Number} ft3Vol
+ * @param {Number} weight
+ * @param {Number} courierFtPrice
+ * @param {Number} courierLbPrice
+ */
 const getCourierCosts = ({ lb3Vol, ft3Vol, weight, courierFtPrice, courierLbPrice }) => {
   if (courierFtPrice && courierLbPrice) {
     let ft3Price = courierFtPrice

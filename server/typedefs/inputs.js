@@ -71,6 +71,11 @@ module.exports = `
     idemKey: String
   }
 
+  input CancelOrderInput {
+    orderID: String!
+    firebaseID: String!
+  }
+
   input UpdateOrderInput {
     _id: String! @constraint(minLength: 2, maxLength: 100, uniqueTypeName: "ID")
     cart: [ProductInput]

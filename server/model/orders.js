@@ -25,11 +25,12 @@ const payment = {
   method: { type: String, required: true },
   brand: { type: String, required: true },
   last4: { type: String, required: true },
+  fee: { type: Number, required: true },
 }
 
 const timelineObject = {
   status: { type: String, required: true, default: "unfulfilled" },
-  date: { type: String, required: true, default: Date.now }
+  date: { type: Date, required: true, default: Date.now }
 }
 
 const shipping = new Schema({
@@ -48,6 +49,7 @@ shipping.path("address").discriminator("Venezuela", venezuelanAddressSchema)
 const orderSchema = new Schema({
   cart: [product],
   userID: { type: String, required: true },
+  locator: { type: String },
   email: { type: String, required: true },
   phoneNumber: { type: String, required: true },
   price: { type: Number, required: true },
@@ -57,6 +59,12 @@ const orderSchema = new Schema({
   status: { type: String, required: true, default: "unfulfilled" },
   creationDate: { type: Date, required: true, default: Date.now },
   updatedOn: { type: Date, required: true, default: Date.now }
+})
+
+orderSchema.pre('save', function (next) {
+  if (!this.locator)
+    this.locator = `${this._id}`.substr(-5)
+  next()
 })
 
 module.exports = model("Order", orderSchema)

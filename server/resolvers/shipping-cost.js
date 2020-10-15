@@ -114,27 +114,6 @@ const getShippingCosts = combineResolvers(
         in_stock.push(estimation.asin)
       }
       const existingRegistry = stocks.find(s => s.asin === estimation.asin)
-      // const existingProduct = products.find(p => p.productID === estimation.asin)
-
-      // const productPrice = existingProduct.buybox_winner ? existingProduct.buybox_winner.price : existingProduct.price
-      // const stockPrice = estimation.price
-
-      // if (existingProduct && productPrice.value !== stockPrice.value) {
-      //   price_changed = true
-      //   dbOps.push(DBQuery(Product.updateOne({ productID: existingProduct.productID }, { $set: { "buybox_winner.$.price": { ...stockPrice, symbol: "US$" } } })))
-      //   const productIdx = products.findIndex(p => p.productID === existingProduct.productID)
-      //   products[productIdx] = {
-      //     ...existingProduct,
-      //     buybox_winner: {
-      //       ...existingProduct.buybox_winner,
-      //       price: {
-      //         ...existingProduct.buybox_winner.price,
-      //         value: stockPrice.value
-      //       }
-      //     }
-      //   }
-      // }
-
       if (existingRegistry) {
         dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() }))
       } else {
@@ -151,16 +130,17 @@ const getShippingCosts = combineResolvers(
     const flatFeeProducts = products.filter(p => flatFeeDepartments.includes(p.department))
     const dynamicFeeProducts = products.filter(p => !flatFeeDepartments.includes(p.department))
 
-    let orderDimensions = 0, orderWeight = 0, orderVolWeight = 0,
-      minVol = 0.33, courierFtPrice = 15,
-      courierLbPrice = 5.5, minWeight = 1, totalOrderPrice = 0
+    let orderDimensions = 0, orderWeight = 0,
+      orderVolWeight = 0, minVol = 0.33,
+      courierFtPrice = 15, courierLbPrice = 5.5,
+      minWeight = 1, totalProductsPrice = 0
 
     for (let i = 0; i < dynamicFeeProducts.length; i++) {
       const p = dynamicFeeProducts[i]
       const { lb3Vol, ft3Vol, weight, buybox_winner, price } = p
       const { quantity: qty } = input.find(i => i.productID === p.productID)
       let productPrice = buybox_winner && buybox_winner.price ? buybox_winner.price.value : price.value
-      totalOrderPrice += productPrice
+      totalProductsPrice += productPrice
       const productFt3Vol = ft3Vol * qty
       const productWeight = weight * qty
       const productLb3Vol = lb3Vol * qty
@@ -188,10 +168,15 @@ const getShippingCosts = combineResolvers(
     if (airCost > 100 && airCost < 999) markup = 0.90
     if (airCost > 1000) markup = 0.95
 
+    // Shipping price
     const finalAirPrice = airCost / markup
     const finalSeaPrice = seaCost / markup
-    const airStripeFee = (((finalAirPrice + totalOrderPrice) * 2.9) / 100) + 0.3
-    const seaStripeFee = (((finalSeaPrice + totalOrderPrice) * 2.9) / 100) + 0.3
+    // Stripe price
+    const airStripeFee = ((((finalAirPrice + totalProductsPrice) * 2.9) / 100) + 0.3)
+    const seaStripeFee = ((((finalSeaPrice + totalProductsPrice) * 2.9) / 100) + 0.3)
+    // Handle fee
+    const totalSeaFee = seaStripeFee + 1
+    const totalAirFee = airStripeFee + 1
 
     await closeDB()
 
@@ -202,11 +187,14 @@ const getShippingCosts = combineResolvers(
       price_changed,
       seaCost,
       airCost,
+      totalProductsPrice,
       weight: orderWeight,
       dimensions: orderDimensions,
       volumetric_weight: orderVolWeight,
       airFee: airStripeFee,
-      seaFee: seaStripeFee
+      seaFee: seaStripeFee,
+      totalAirFee,
+      totalSeaFee
     }
 
   })

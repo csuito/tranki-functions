@@ -12,13 +12,20 @@ const AllSettled = require('promise.allsettled')
  */
 const getProduct = combineResolvers(
   isAuthenticated,
-  async (_, { productID, variantID = false }) => {
+  async (_, { productID }) => {
     const Product = require("../model/products")
     const DBQuery = require("./helpers/dbSession")
     const algoliaClient = require('../../functions/config/algolia')()
     try {
       // First we check if the product is in our DB
-      const query = Product.findOne({ productID }).lean()
+      const query = Product.findOne(
+        {
+          $or:
+            [
+              { productID },
+              { variants: { $elemMatch: { asin: productID } } }
+            ]
+        }).lean()
       const dbProduct = await DBQuery(query)
       // If not present in the DB
       if (!dbProduct) {
@@ -102,11 +109,11 @@ const getProduct = combineResolvers(
         }
       } else {
         // If the product is in the DB and a variant was specified
-        if (variantID) {
+        if (dbProduct.productID !== productID) {
 
           const variantIndex = dbProduct.variants
             .map(v => v.asin)
-            .indexOf(variantID)
+            .indexOf(productID)
 
           if (variantIndex !== -1) {
             const variant = dbProduct.variants[variantIndex]
@@ -117,7 +124,7 @@ const getProduct = combineResolvers(
             } else {
               // If not we look for variant's detail
               const { data } = await client.get("/request", {
-                params: { type: requestTypes.PRODUCT, asin: variantID, language: 'es_US' },
+                params: { type: requestTypes.PRODUCT, asin: productID, language: 'es_US' },
                 timeout: 350000
               })
               // Once we obtain data from rainforest

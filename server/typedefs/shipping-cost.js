@@ -11,5 +11,8 @@ module.exports = `
     volumetric_weight: Float!
     airFee: Float!
     seaFee: Float!
+    totalProductsPrice: Float!
+    totalAirFee: Float!
+    totalSeaFee: Float!
   }
 `

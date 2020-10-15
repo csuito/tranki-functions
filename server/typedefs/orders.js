@@ -25,6 +25,7 @@ module.exports = `
     method: String
     brand: String
     last4: String
+    fee: Float
   }
 
   interface BaseAddress {
@@ -103,5 +104,6 @@ module.exports = `
     status: String
     creationDate: String
     updatedOn: String
+    locator: String
   }
 `
