@@ -25,6 +25,7 @@ const payment = {
   method: { type: String, required: true },
   brand: { type: String, required: true },
   last4: { type: String, required: true },
+  fee: { type: Number, required: true },
 }
 
 const timelineObject = {
