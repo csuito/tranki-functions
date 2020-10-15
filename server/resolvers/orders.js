@@ -45,7 +45,7 @@ module.exports = {
       const Order = require("../model/orders")
       const { sendOrderConfirmation } = require('./services/sendgrid')
       try {
-        const { payment: { card, customer, last4, brand }, userID, email, price, idemKey, cart, shipping: { total: shippingCost } } = input
+        const { payment: { card, customer, last4, brand, fee }, userID, email, price, idemKey, cart, shipping: { total: shippingCost } } = input
 
         // Stripe payment
         let options = {}
@@ -63,7 +63,7 @@ module.exports = {
         // If payment was successful we proceed with order creation and email notifications
         if (charge && charge.id) {
           // Adding stripe info to order payload
-          input = { ...input, payment: { txID: charge.id, method: 'Stripe', last4, brand } }
+          input = { ...input, payment: { txID: charge.id, method: 'Stripe', last4, brand, fee } }
 
           // Saving order to DB
           const query = Order.create(input)
