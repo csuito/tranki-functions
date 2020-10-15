@@ -5,7 +5,7 @@ const User = require("../model/users")
 
 module.exports = {
 
-  userExists: async (_, { firebaseID }, ctx) => {
+  userExists: async (_, { firebaseID }) => {
     try {
       const query = User.findOne({ firebaseID })
       const user = await DBQuery(query)
