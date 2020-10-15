@@ -16,7 +16,7 @@ const queries = `
   type Query {
     product(productID: ID! variantID: String): Product
     users: [User]
-    userExists(email: String firebaseID: String phoneNumber: String): Boolean!
+    userExists(firebaseID: String!): Boolean!
     orders: [Order]
     activeUsers: [User]
     userOrders(userID: ID!): [Order]
