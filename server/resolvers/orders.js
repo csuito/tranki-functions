@@ -119,8 +119,10 @@ module.exports = {
           const query = Order.findOneAndUpdate({ _id: orderID }, { $set: { status: "cancelled" } })
           await DBQuery(query)
           const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
-          const { payment: { txID: charge } } = order
-          const refund = await stripe.refunds.create({ charge })
+          const { price, payment: { txID: charge, fee } } = order
+          // The amount to be refunded is the price minus our processing fee
+          const amount = parseInt(((price - fee) * 100).toFixed(0), 10)
+          const refund = await stripe.refunds.create({ charge, amount })
           if (refund.status === "succeeded") {
             // Let the user know through email
           }
