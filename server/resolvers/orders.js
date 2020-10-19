@@ -95,9 +95,10 @@ module.exports = {
     }),
 
   cancelOrder: combineResolvers(
-    isOwner,
+    // isOwner,
     async (_, { input }) => {
-      const Order = require("../model/orders")
+      const Order = require('../model/orders')
+      const User = require('../model/users')
       const dayjs = require('dayjs')
       const { orderID } = input
       let hourDiff, order
@@ -116,6 +117,7 @@ module.exports = {
       // Issuing automatic refund
       if (hourDiff <= 2) {
         try {
+          const { orderCancelled } = require('./services/sendgrid')
           const query = Order.findOneAndUpdate({ _id: orderID }, { $set: { status: "cancelled" } })
           await DBQuery(query)
           const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
@@ -126,6 +128,10 @@ module.exports = {
           if (refund.status === "succeeded") {
             // Let the user know through email
           }
+          const user = await DBQuery(User.findOne({ firebaseID: order.userID }))
+          const { firstName, email } = user
+          const { locator } = order
+          await orderCancelled({ firstName, email, total: price, orderID: locator })
           return true
         } catch (e) {
           return false
