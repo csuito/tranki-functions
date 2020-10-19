@@ -20,7 +20,7 @@ module.exports = {
     async (_, { userID }) => {
       const Order = require("../model/orders")
       try {
-        const query = Order.find({ userID })
+        const query = Order.find({ userID }).lean()
         return await DBQuery(query)
       } catch (e) {
         return e
