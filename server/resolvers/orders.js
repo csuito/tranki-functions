@@ -72,8 +72,8 @@ module.exports = {
           const order = await DBQuery(query)
           const { locator } = order
           const stripeFee = (((price) * 2.9) / 100) + 0.3
-          const subTotal = price - (stripeFee + shippingCost)
-          await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost, total: price, stripeFee })
+          const subTotal = price - (stripeFee + shippingCost.price)
+          await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost: shippingCost.price, total: price, stripeFee })
           return order
         }
         return new Error('Unable to process payment')
