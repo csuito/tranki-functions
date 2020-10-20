@@ -1,0 +1,1 @@
+gcloud config set project trankiapp-staging

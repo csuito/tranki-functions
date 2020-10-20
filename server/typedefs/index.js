@@ -22,7 +22,7 @@ const queries = `
     userOrders(userID: ID!): [Order]
     order(_id: ID!): Order
     user(input: GetUserInput!): User
-    products(department: String! category: String): [Product]
+    products(department: String! category: String page: Int limit: Int): [Product]
     categories(department: String!): [CategoryProduct]!
     search(search_term: String! sort_by: String page: Int): Results
     stock(asin: ID!) : StockEstimation

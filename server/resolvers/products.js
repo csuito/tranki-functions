@@ -7,15 +7,16 @@ const { isAuthenticated } = require("./middleware/auth")
  */
 const getProducts = combineResolvers(
   isAuthenticated,
-  async (_, { department = null, category = null }) => {
+  async (_, { department = null, category = null, page = 1, limit = 10 }) => {
     const Product = require("../model/products")
     const DBQuery = require("./helpers/dbSession")
     try {
       let dbQuery = {}
       if (department) dbQuery.department = department
       if (category) dbQuery.category = category
-      const query = Product.find(dbQuery).lean()
-      return await DBQuery(query)
+      const query = Product.paginate(dbQuery, { page, limit }).lean()
+      const products = await DBQuery(query)
+      return products.docs
     } catch (err) {
       throw new Error("Unable to find product in DB")
     }
