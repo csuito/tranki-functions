@@ -40,7 +40,7 @@ module.exports = {
     }),
 
   createOrder: combineResolvers(
-    // isOwner,
+    isOwner,
     async (_, { input }) => {
       const Order = require("../model/orders")
       const { sendOrderConfirmation } = require('./services/sendgrid')
