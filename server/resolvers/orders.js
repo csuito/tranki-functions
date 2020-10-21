@@ -44,6 +44,7 @@ module.exports = {
     async (_, { input }) => {
       const Order = require("../model/orders")
       const { sendOrderConfirmation } = require('./services/sendgrid')
+      const { orderRecieved } = require('../../functions/bots/slack')
       try {
         const { payment: { card, customer, last4, brand, fee }, userID, email, price, idemKey, cart, shipping: { total: shippingCost } } = input
 
@@ -52,7 +53,7 @@ module.exports = {
         if (idemKey) {
           options.idempotencyKey = idemKey
         }
-        const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
+        const stripe = require('stripe')(process.env.STRIPE_KEY)
         const charge = await stripe.charges.create({
           amount: parseInt((price * 100).toFixed(0), 10),
           currency: 'usd',
@@ -63,7 +64,8 @@ module.exports = {
         // If payment was successful we proceed with order creation and email notifications
         if (charge && charge.id) {
           // Adding stripe info to order payload
-          input = { ...input, payment: { txID: charge.id, method: 'Stripe', last4, brand, fee } }
+          let formattedPrice = parseFloat(price.toFixed(2))
+          input = { ...input, price: formattedPrice, payment: { txID: charge.id, method: 'Stripe', last4, brand, fee } }
 
           // Saving order to DB
           const query = Order.create(input)
@@ -73,6 +75,7 @@ module.exports = {
           const { locator } = order
           const stripeFee = (((price) * 2.9) / 100) + 0.3
           const subTotal = price - (stripeFee + shippingCost.price)
+          await orderRecieved({ email, total: formattedPrice, date: new Date().toDateString(), locator })
           await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost: shippingCost.price, total: price, stripeFee })
           return order
         }
@@ -120,7 +123,7 @@ module.exports = {
           const { orderCancelled } = require('./services/sendgrid')
           const query = Order.findOneAndUpdate({ _id: orderID }, { $set: { status: "cancelled" } })
           await DBQuery(query)
-          const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
+          const stripe = require('stripe')(process.env.STRIPE_KEY)
           const { price, payment: { txID: charge, fee } } = order
           // The amount to be refunded is the price minus our processing fee
           const amount = parseInt(((price - fee) * 100).toFixed(0), 10)

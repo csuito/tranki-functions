@@ -3,13 +3,13 @@ if (process.env.NODE_ENV === "local") {
   require("dotenv").config()
 }
 console.log(process.env.SENDGRID_API)
-sendgrid.setApiKey(process.env.SENDGRID_API || "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")
+sendgrid.setApiKey(process.env.SENDGRID_API)
 module.exports = {
   /**
    * Sends welcome message to user
    */
   sendWelcomeMessage: async ({ firstName, email }) => {
-    const emailID = process.env.WELCOME_EMAIL || "d-dd892e2c814041c0a338b398ad68708b"
+    const emailID = process.env.WELCOME_EMAIL
     const msg = {
       to: email,
       from: 'contacto@tranki.app',
@@ -31,7 +31,7 @@ module.exports = {
    * Send email order update
    */
   sendOrderConfirmation: async ({ email, locator, cart, subTotal, shippingCost, total, stripeFee }) => {
-    const emailID = process.env.ORDER_UPDATE || "d-e825797c82434fb3b7bde6541b822bfb"
+    const emailID = process.env.ORDER_UPDATE
     const qty = cart.reduce((count, product) => count + product.qty, 0)
     const msg = {
       to: email,

@@ -1,5 +1,5 @@
 if (process.env.NODE_ENV === "local") {
-  require("dotenv").config()
+  require("dotenv").config({ path: "/Users/henry/dev/Tranki/Functions/api.env" })
 }
 
 const app = require("express")()
