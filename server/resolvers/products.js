@@ -14,10 +14,11 @@ const getProducts = combineResolvers(
       let dbQuery = {}
       if (department) dbQuery.department = department
       if (category) dbQuery.category = category
-      const query = Product.paginate(dbQuery, { page, limit }).lean()
+      const query = Product.paginate(dbQuery, { page, limit })
       const products = await DBQuery(query)
       return products.docs
     } catch (err) {
+      console.log(err)
       throw new Error("Unable to find product in DB")
     }
   })
