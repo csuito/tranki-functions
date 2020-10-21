@@ -47,7 +47,6 @@ module.exports = {
       const { orderRecieved } = require('../../functions/bots/slack')
       try {
         const { payment: { card, customer, last4, brand, fee }, userID, email, price, idemKey, cart, shipping: { total: shippingCost } } = input
-
         // Stripe payment
         let options = {}
         if (idemKey) {
@@ -73,10 +72,9 @@ module.exports = {
           // Sending order completed email
           const order = await DBQuery(query)
           const { locator } = order
-          const stripeFee = (((price) * 2.9) / 100) + 0.3
-          const subTotal = price - (stripeFee + shippingCost.price)
+          const subTotal = price - (fee + shippingCost.price)
           await orderRecieved({ email, total: formattedPrice, date: new Date().toDateString(), locator })
-          await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost: shippingCost.price, total: price, stripeFee })
+          await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost: shippingCost.price, total: price, stripeFee: fee })
           return order
         }
         return new Error('Unable to process payment')
