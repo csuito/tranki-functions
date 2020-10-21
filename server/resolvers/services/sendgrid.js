@@ -53,8 +53,30 @@ module.exports = {
       await sendgrid.send(msg)
       return { success: true }
     } catch (e) {
-      console.log(e.response.body.errors)
-      throw new Error({ success: false })
+      return { success: false }
+    }
+  },
+
+  /**
+   * Sends email on order cancellation
+   */
+  orderCancelled: async ({ orderID, firstName, total, email }) => {
+    const emailID = process.env.ORDER_CANCELLED || "d-afeed6ce365240ad94439370f8bb1f92"
+    const msg = {
+      to: email,
+      from: 'contacto@tranki.app',
+      fromname: 'Equipo Tranki',
+      subject: 'Tu orden ha sido actualizada',
+      templateId: emailID,
+      dynamicTemplateData: {
+        orderID, firstName, total
+      }
+    }
+    try {
+      await sendgrid.send(msg)
+      return { success: true }
+    } catch (e) {
+      return { success: false }
     }
   }
 }
