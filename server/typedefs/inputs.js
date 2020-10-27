@@ -77,6 +77,12 @@ module.exports = `
     firebaseID: String!
   }
 
+  input UpdateProductStatusInput {
+    orderID: String!
+    status: String!
+    productID: String!
+  }
+
   input UpdateOrderInput {
     _id: String! @constraint(minLength: 2, maxLength: 100, uniqueTypeName: "ID")
     cart: [ProductInput]

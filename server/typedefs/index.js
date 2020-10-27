@@ -42,6 +42,7 @@ const mutations = `
     updateOrder(input: UpdateOrderInput!): Order
     createUser(input: CreateUserInput!): User
     updateUser(input: UpdateUserInput!): User
+    updateOrderProductStatus(input: UpdateProductStatusInput!): String
     addUserAddress(input: AddressInput!): User
     updateUserAddress(input: UpdateAddressInput!): User
     removeUserAddress(input: RemoveUserAddressInput): Boolean
