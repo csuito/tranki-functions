@@ -1,4 +1,4 @@
-const { orders, order, createOrder, updateOrder, userOrders, cancelOrder } = require("./orders")
+const { orders, order, createOrder, updateOrder, userOrders, cancelOrder, updateOrderProductStatus } = require("./orders")
 const { createUser, updateUser, addUserAddress, updateUserAddress, removeUserAddress, addUserProduct, user, users, activeUsers, changeUserStatus, userExists, addExpoToken } = require("./users")
 const { onBoardStripeUser, removeCustomerCard, listCustomerCards } = require('./stripe')
 
@@ -27,6 +27,7 @@ module.exports = {
     createOrder,
     updateOrder,
     cancelOrder,
+    updateOrderProductStatus,
     createUser,
     updateUser,
     addUserAddress,

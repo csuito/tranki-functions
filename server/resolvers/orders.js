@@ -96,7 +96,7 @@ module.exports = {
     }),
 
   cancelOrder: combineResolvers(
-    // isOwner,
+    isOwner,
     async (_, { input }) => {
       const Order = require('../model/orders')
       const User = require('../model/users')
@@ -140,5 +140,20 @@ module.exports = {
       }
 
       return false
-    })
+    }),
+
+  updateOrderProductStatus: combineResolvers(
+    isAdmin,
+    async (_, { input }) => {
+      const { productID, orderID, status } = input
+      const Order = require('../model/orders')
+      const order = await DBQuery(Order.findOne({ _id: orderID }).lean())
+      if (!order) { throw new Order("No order found with specified ID") }
+      const productIndex = order.cart.findIndex(p => p.productID === productID)
+      if (productIndex === -1) { throw new Error("Product not found in order's cart") }
+      order.cart[productIndex].status = status
+      await order.save()
+      return status
+    }
+  )
 }

@@ -7,6 +7,7 @@ const product = {
     name: { type: String, required: true },
     supplierOrderID: { type: String }
   },
+  status: { type: String, required: true, default: "waiting" },
   title: { type: String, required: true },
   price: { type: String, required: true },
   image: { type: String, required: true },
