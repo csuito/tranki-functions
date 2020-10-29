@@ -3,7 +3,6 @@
   const algoliaClient = require("../config/algolia")()
   const { connectDB, closeDB } = require('../../functions/config/db')
   const Product = require('../../server/model/products')
-  let allAlgoliaProducts = []
   let extraAlgoliaProducts = []
   try {
     await connectDB()
@@ -15,30 +14,14 @@
       let extraObjIds = objectIDs.filter(o => !products.includes(o))
       extraAlgoliaProducts = [...extraAlgoliaProducts, ...extraObjIds]
       console.log({ products: products.length, objectIDs: objectIDs.length, extra: extraObjIds.length })
-      // allAlgoliaProducts = [...allAlgoliaProducts, ...hits]
+      console.log({ extraAlgoliaProducts: JSON.stringify(extraAlgoliaProducts), length: extraAlgoliaProducts.length })
     }
     index.browseObjects({
       batch: callback,
       query: '',
       filters: ''
     }).then(async () => {
-      console.log("Done!")
-      console.log({ extraAlgoliaProducts: extraAlgoliaProducts, extraProducts: extraAlgoliaProducts.length })
-      await closeDB()
-      // const allProducts = await DBQuery(Product.find())
-      // allProducts = allProducts.map(p => p.objectID)
-
-      // const objectIDSInAlgoliaButNotInDB = allAlgoliaProducts
-      //   .map(a => a.objectID)
-      //   .filter(a => !allProducts.includes(a))
-
-      // const productsInDBButNotInAlgolia = allProducts
-      //   .filter(a => !allAlgoliaProducts.includes(a))
-
-      // console.log({ productsInDBButNotInAlgolia: productsInDBButNotInAlgolia.length, objectIDSInAlgoliaButNotInDB: objectIDSInAlgoliaButNotInDB.length })
-
-      //
-
+      console.log({ extraAlgoliaProducts, length: extraAlgoliaProducts.length })
     }).catch(e => {
       console.log(e)
     })

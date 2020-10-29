@@ -5,10 +5,13 @@ const DBQuery = require("./helpers/dbSession")
 module.exports = {
   orders: combineResolvers(
     isAdmin,
-    async () => {
+    async ({ status, courier }) => {
+      let query = {}
+      if (status) query.status = status
+      if (courier) query.shipping.courier = courier
       const Order = require("../model/orders")
       try {
-        const query = Order.find()
+        const query = Order.find(query)
         return await DBQuery(query)
       } catch (e) {
         return e
