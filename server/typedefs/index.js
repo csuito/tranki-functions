@@ -17,7 +17,7 @@ const queries = `
     product(productID: ID! variantID: String): Product
     users: [User]
     userExists(firebaseID: String!): Boolean!
-    orders: [Order]
+    orders(status: String courier: String): [Order]
     activeUsers: [User]
     userOrders(userID: ID!): [Order]
     order(_id: ID!): Order
@@ -30,7 +30,7 @@ const queries = `
     bestsellers(url: String! page: Int): Bestsellers,
     departments: [Department]
     banners: [Banner]
-    shipping(input:[GetShippingCostsInput!]): ShippingCost
+    shipping(stock: Boolean input:[GetShippingCostsInput!]): ShippingCost
     listCustomerCards(input: ListCustomerCardInput!) : [StripeCard]
   }
 `

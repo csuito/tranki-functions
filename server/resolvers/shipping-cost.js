@@ -13,7 +13,7 @@ const { connectDB, closeDB } = require("../../functions/config/db")
  */
 const getShippingCosts = combineResolvers(
   isAuthenticated,
-  async (_, { input }) => {
+  async (_, { input, stock = true }) => {
     let asins = input
       .map(a => a.productID)
 
@@ -93,40 +93,43 @@ const getShippingCosts = combineResolvers(
       })
 
     // Obtaining fresh stock_estimation
-    const stockEstimations = check_stock.map(s => {
-      const params = {
-        type: requestTypes.STOCK_ESTIMATION,
-        asin: s
+    if (stock) {
+      const stockEstimations = check_stock.map(s => {
+        const params = {
+          type: requestTypes.STOCK_ESTIMATION,
+          asin: s
+        }
+        return client.get("/request", { params })
+      })
+
+      let allEstimations = await AllSettled(stockEstimations)
+
+      allEstimations = allEstimations
+        .filter(a => a.status === "fulfilled" && a.value.data.stock_estimation)
+        .map(a => a.value.data.stock_estimation)
+
+      // Checking fresh estimations and saving or updating in the DB
+      let dbOps = []
+      for (estimation of allEstimations) {
+        if (estimation.in_stock) {
+          in_stock.push(estimation.asin)
+        }
+        const existingRegistry = stocks.find(s => s.asin === estimation.asin)
+        if (existingRegistry) {
+          dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() }))
+        } else {
+          dbOps.push(Stock.create(estimation))
+        }
       }
-      return client.get("/request", { params })
-    })
 
-    let allEstimations = await AllSettled(stockEstimations)
-
-    allEstimations = allEstimations
-      .filter(a => a.status === "fulfilled" && a.value.data.stock_estimation)
-      .map(a => a.value.data.stock_estimation)
-
-    // Checking fresh estimations and saving or updating in the DB
-    let dbOps = []
-    for (estimation of allEstimations) {
-      if (estimation.in_stock) {
-        in_stock.push(estimation.asin)
-      }
-      const existingRegistry = stocks.find(s => s.asin === estimation.asin)
-      if (existingRegistry) {
-        dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() }))
-      } else {
-        dbOps.push(Stock.create(estimation))
+      if (dbOps.length > 0) {
+        await Promise.all(dbOps)
       }
     }
 
-    if (dbOps.length > 0) {
-      await Promise.all(dbOps)
-    }
 
     // Calculating shipping and processing costs for all dynamic and static products that are in stock
-    products = products.filter(p => in_stock.includes(p.productID))
+    if (stock) products = products.filter(p => in_stock.includes(p.productID))
     const flatFeeProducts = products.filter(p => flatFeeDepartments.includes(p.department))
     const dynamicFeeProducts = products.filter(p => !flatFeeDepartments.includes(p.department))
 
