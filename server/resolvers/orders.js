@@ -1,18 +1,28 @@
 const { combineResolvers } = require("graphql-resolvers")
 const { isOwnerOrAdmin, isAdmin, isAuthenticated, isOwner } = require("./middleware/auth")
+const dayjs = require('dayjs')
 const DBQuery = require("./helpers/dbSession")
+
 
 module.exports = {
   orders: combineResolvers(
     isAdmin,
-    async ({ status, courier }) => {
+    async (_, { status = "unfulfilled", courier = false, month = false, year = false }) => {
       let query = {}
       if (status) query.status = status
-      if (courier) query.shipping.courier = courier
+      if (courier) {
+        query.shipping = { courier }
+      }
+      if (month && year) {
+        const from = dayjs().set('month', month).set('year', year).startOf('month').toDate()
+        const to = dayjs().set('month', month).set('year', year).endOf('month').toDate()
+        query.creationDate = { '$lte': to, '$gte': from }
+      }
       const Order = require("../model/orders")
       try {
-        const query = Order.find(query)
-        return await DBQuery(query)
+        const opQuery = Order.find(query).lean()
+        const response = await DBQuery(opQuery)
+        return response
       } catch (e) {
         return e
       }
