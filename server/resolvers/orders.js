@@ -158,5 +158,19 @@ module.exports = {
       await order.save()
       return status
     }
+  ),
+
+  setCourierSpecs: combineResolvers(
+    isAdmin,
+    async (_, { input }) => {
+      const Order = require('../model/orders')
+      const { orderID, weight, dimensions } = input
+      try {
+        await DBQuery(Order.findOneAndUpdate({ _id: orderID }, { '$set': { 'shipping.courier_weight': weight, 'shipping.courier_dimensions': dimensions } }))
+        return true
+      } catch (e) {
+        throw new Error(e)
+      }
+    }
   )
 }
