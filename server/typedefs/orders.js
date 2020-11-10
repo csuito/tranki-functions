@@ -85,6 +85,8 @@ module.exports = `
     method: String
     dimensions: String
     weight: String
+    courier_dimensions: String
+    courier_weight: String
     timeline: [Timeline]
     eta: String
   }

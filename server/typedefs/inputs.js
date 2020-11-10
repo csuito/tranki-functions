@@ -77,6 +77,12 @@ module.exports = `
     firebaseID: String!
   }
 
+  input CourierSpecsInput { 
+    orderID: String!
+    weight: String!
+    dimensions: String!
+  }
+
   input UpdateProductStatusInput {
     orderID: String!
     status: String!

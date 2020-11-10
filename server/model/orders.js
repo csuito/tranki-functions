@@ -41,6 +41,8 @@ const shipping = new Schema({
   method: { type: String, required: true },
   weight: { type: String },
   dimensions: { type: String },
+  courier_weight: { type: String },
+  courier_dimensions: { type: String },
   eta: { type: String },
   timeline: [timelineObject]
 }, { _id: false })
