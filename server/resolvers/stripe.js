@@ -11,7 +11,7 @@ module.exports = {
     async (_, { input = {} }) => {
       const { card_token, email, firebaseID } = input
       const User = require('../model/users')
-      const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
+      const stripe = require('stripe')(process.env.STRIPE_KEY)
 
       const user = await DBQuery(User.findOne({ firebaseID }))
 
@@ -53,7 +53,7 @@ module.exports = {
     isOwner,
     async (_, { input = {} }) => {
       const { customer } = input
-      const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
+      const stripe = require('stripe')(process.env.STRIPE_KEY)
       let cards = await stripe.customers.listSources(
         customer,
         { object: 'card' }
@@ -64,7 +64,7 @@ module.exports = {
   removeCustomerCard: combineResolvers(
     isOwner,
     async (_, { input = {} }) => {
-      const stripe = require('stripe')('sk_test_51HPRJCK9woMnl4elTKweX8ESZ67UsoXWklbWE17X9t6iT2GbE2Aj47auuBKa6R2MDu0P5m9Aeefj2Iz9tiz3t7mF009ApZZ1A3')
+      const stripe = require('stripe')(process.env.STRIPE_KEY)
       const { customer, firebaseID, card_id } = input
       const User = require('../model/users')
       try {
