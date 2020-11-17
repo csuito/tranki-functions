@@ -11,15 +11,15 @@ const productSchema = new Schema({
 
 const userSchema = new Schema({
   firebaseID: { type: String, required: true, unique: true, index: true },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  firstName: { type: String },
+  lastName: { type: String },
   email: { type: String, required: true, unique: true },
   phoneNumber: { type: String, required: true },
   shippingAddresses: [addressSchema],
   viewedProducts: [productSchema],
   status: { type: String, required: true, default: "active" },
-  lastLogin: { type: String, required: true, default: Date.now },
-  creationDate: { type: String, required: true, default: Date.now },
+  lastLogin: { type: Date, required: true, default: Date.now },
+  creationDate: { type: Date, required: true, default: Date.now },
   expoTokens: [{
     token: { type: String },
     installationID: { type: String }

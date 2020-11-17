@@ -25,7 +25,7 @@ module.exports = {
     } catch (e) {
       return e
     }
-    const { firstName, email } = user
+    const { firstName = "usuario", email } = user
     await sendWelcomeMessage({ firstName, email })
     return user
   },
@@ -175,8 +175,8 @@ module.exports = {
         if (user.expoTokens && user.expoTokens.length > 0) {
           const existingDevice = user.expoTokens.find(t => t.installationID === installationID)
           if (existingDevice) {
-            if (user.expoTokens[index].token === token) return true
             const index = user.expoTokens.findIndex(t => t.installationID === installationID)
+            if (user.expoTokens[index].token === token) return true
             existingDevice.token = token
             user.expoTokens[index] = existingDevice
             await DBQuery(User.updateOne({ firebaseID }, user))
@@ -189,6 +189,7 @@ module.exports = {
         console.log("Done!")
         return true
       } catch (e) {
+        console.log(e)
         return false
       }
     }

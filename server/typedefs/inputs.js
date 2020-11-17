@@ -132,8 +132,8 @@ module.exports = `
 
   input CreateUserInput {
     firebaseID: String!  @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
-    firstName: String!  @constraint(minLength: 2, maxLength: 100)
-    lastName: String!  @constraint(minLength: 2, maxLength: 100)
+    firstName: String
+    lastName: String
     email: String! @constraint(minLength: 5, format: "email")
     phoneNumber: String! @constraint(minLength: 9)
   }
