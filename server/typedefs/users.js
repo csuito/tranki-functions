@@ -10,7 +10,7 @@ module.exports = `
     viewedProducts: [Product]
     lastLogin: String
     creationDate: String
-    expoPushTokens: [PushDevice!]
+    expoTokens: [PushDevice!]
     stripeCustomer: String
     cards: [StripeCard]
   }
