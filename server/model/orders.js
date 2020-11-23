@@ -57,6 +57,8 @@ const orderSchema = new Schema({
   phoneNumber: { type: String, required: true },
   price: { type: Number, required: true },
   cost: { type: Number },
+  weight: { type: Number },
+  dimensions: { type: Number },
   payment,
   shipping,
   status: { type: String, required: true, default: "unfulfilled" },
