@@ -121,7 +121,7 @@ const getShippingCosts = combineResolvers(
         }
         const existingRegistry = stocks.find(s => s.asin === estimation.asin)
         if (existingRegistry) {
-          dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now() }))
+          dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now(), stock_failure: 0 }))
         } else {
           dbOps.push(Stock.create(estimation))
         }

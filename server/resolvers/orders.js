@@ -59,7 +59,7 @@ module.exports = {
       const { sendOrderConfirmation } = require('./services/sendgrid')
       const { orderRecieved } = require('../../functions/bots/slack')
       try {
-        const { payment: { card, customer, last4, brand, fee }, userID, email, price, idemKey, cart, shipping: { total: shippingCost } } = input
+        const { payment: { card, customer, last4, brand, fee }, userID, email, price, idemKey, cart, shipping: { total: shippingCost, weight, dimensions } } = input
         // Stripe payment
         let options = {}
         if (idemKey) {
@@ -77,8 +77,7 @@ module.exports = {
         if (charge && charge.id) {
           // Adding stripe info to order payload
           let formattedPrice = parseFloat(price.toFixed(2))
-          input = { ...input, price: formattedPrice, payment: { txID: charge.id, method: 'Stripe', last4, brand, fee } }
-
+          input = { ...input, price: formattedPrice, payment: { txID: charge.id, method: 'Stripe', last4, brand, fee }, weight, dimensions }
           // Saving order to DB
           const query = Order.create(input)
 
