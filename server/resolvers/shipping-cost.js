@@ -5,6 +5,8 @@ const { client } = require('../../client')
 const AllSettled = require('promise.allsettled')
 const { getSpec, getCourierCosts } = require('../../functions/helpers/hookHelpers')
 const { connectDB, closeDB } = require("../../functions/config/db")
+const algoliaClient = require("../../functions/config/algolia")()
+const index = algoliaClient.initIndex("products")
 
 
 /**
@@ -57,6 +59,9 @@ const getShippingCosts = combineResolvers(
     for (asin of asins) {
       const stock = stocks.find(s => s.asin === asin)
       if (!stock) {
+        check_stock.push(asin)
+      }
+      if (stock && !stock.in_stock) {
         check_stock.push(asin)
       }
     }
@@ -121,6 +126,25 @@ const getShippingCosts = combineResolvers(
           dbOps.push(Stock.create(estimation))
         }
       }
+      /**
+       * Checking for out of stock products
+       */
+      products
+        .filter(p => !in_stock.includes(p.productID))
+        .forEach(p => {
+          const existingRegistry = stocks.find(s => s.asin === p.productID)
+          if (existingRegistry) {
+            if (existingRegistry.stock_failure > 1) {
+              dbOps.push(Stock.deleteOne({ _id: existingRegistry._id }))
+              dbOps.push(Product.deleteOne({ _id: p._id }))
+              dbOps.push(index.deleteObject(p.objectID))
+            } else {
+              dbOps.push(Stock.update({ _id: existingRegistry._id }, { $inc: { stock_failure: 1 }, $set: { in_stock: false } }))
+            }
+          } else {
+            dbOps.push(Stock.create({ stock_level: 0, is_prime: false, in_stock: false, asin: p.productID, lastChecked: new Date(), stock_failure: 1 }))
+          }
+        })
 
       if (dbOps.length > 0) {
         await Promise.all(dbOps)
