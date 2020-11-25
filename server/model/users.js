@@ -30,6 +30,7 @@ const userSchema = new Schema({
       last4: { type: String },
       brand: { type: String },
       id: { type: String },
+      country: { type: String },
       token: { type: String }
     }]
   }

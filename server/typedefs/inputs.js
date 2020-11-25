@@ -1,6 +1,8 @@
 module.exports = `
   input StripeOnBoardInput {
     card_token: String! @constraint(minLength: 5, maxLength: 100)
+    last4: String! @constraint(minLength: 4, maxLength: 4)
+    country: String! @constraint(minLength: 2, maxLength: 3)
     email: String! @constraint(minLength: 5, format: "email")
     firebaseID: String! @constraint(minLength: 5, maxLength: 100, uniqueTypeName: "ID")
   }
