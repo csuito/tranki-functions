@@ -9,7 +9,7 @@ module.exports = {
   onBoardStripeUser: combineResolvers(
     // isAuthenticated,
     async (_, { input = {} }) => {
-      const { card_token, email, firebaseID } = input
+      const { card_token, email, firebaseID, last4, country } = input
       const User = require('../model/users')
       const stripe = require('stripe')(process.env.STRIPE_KEY)
 
@@ -21,14 +21,13 @@ module.exports = {
           const { id } = await stripe.customers.create({ metadata: { email, firebaseID }, email: email, description: firebaseID })
           stripeCustomer = { id, cards: [] }
         } catch (e) {
-          console.log(e)
           return new Error('Unable to create stripe customer')
         }
       } else {
         stripeCustomer = user.stripe
-        const card = stripeCustomer.cards.find(c => c.token === card_token)
+        const card = stripeCustomer.cards.find(c => c.token === card_token || c.last4 === last4)
         if (card) {
-          return new Error('Card already attached to user')
+          return { card_id: card.id, brand: card.brand, last4: card.last4, customer: stripeCustomer.id, token: card.token, country }
         }
       }
 
@@ -36,13 +35,10 @@ module.exports = {
         const { id, brand, last4, country } = await stripe.customers.createSource(stripeCustomer.id, {
           source: card_token
         })
-
         if (id) {
           stripeCustomer.cards.push({ id, brand, last4, token: card_token })
         }
-
         await DBQuery(User.updateOne({ firebaseID }, { $set: { 'stripe': stripeCustomer } }))
-
         return { card_id: id, brand, last4, customer: stripeCustomer.id, country }
       } catch (e) {
         return new Error(e)
