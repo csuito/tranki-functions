@@ -22,7 +22,12 @@ module.exports = {
       MOST_RECENT: "most_recent",
     }
   },
-
+  AVG_SHOES_WEIGHT: 2.5,
+  AVG_SHOES_FT3: 0.3240,
+  AVG_SHOES_LB3: 3.3734,
+  AVG_CLOTHING_WEIGHT: 1.32,
+  AVG_CLOTHING_FT3: 0.2314,
+  AVG_CLOTHING_LB3: 2.4096,
   filters: {
     reviews: {
       stars: {

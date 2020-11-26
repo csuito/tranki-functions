@@ -52,6 +52,7 @@ module.exports = `
     asin: ID
     link: String
     price: Price
+    buybox_winner: BuyBoxWinner
     image: String
     images: [Media]
     attributes: [Attribute]
