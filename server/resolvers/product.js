@@ -104,6 +104,7 @@ const getProduct = combineResolvers(
                 .map(v => v.value)
                 .filter(v => v.data
                   && v.data.product
+                  && v.data.product.asin
                   && v.data.product.buybox_winner
                   && (v.data.product.buybox_winner.price || v.data.product.buybox_winner.rrp)
                   && (v.data.product.main_image || (v.data.product.images && v.data.product.images.length > 0)))

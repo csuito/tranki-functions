@@ -85,7 +85,9 @@ module.exports = {
           const order = await DBQuery(query)
           const { locator } = order
           const subTotal = price - (fee + shippingCost.price)
-          await orderRecieved({ email, total: formattedPrice, date: new Date().toDateString(), locator })
+          if (process.env.PROJECT_ENV === "production") {
+            await orderRecieved({ email, total: formattedPrice, date: new Date().toDateString(), locator })
+          }
           await sendOrderConfirmation({ email, locator, cart, subTotal, shippingCost: shippingCost.price, total: price, stripeFee: fee })
           return order
         }
