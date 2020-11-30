@@ -1,5 +1,4 @@
 (async () => {
-  console.log("Hey!")
   require('dotenv').config()
   const User = require('../../server/model/users')
   const { connectDB, closeDB } = require('../config/db')

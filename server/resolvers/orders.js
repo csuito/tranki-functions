@@ -93,6 +93,7 @@ module.exports = {
         }
         return new Error('Unable to process payment')
       } catch (e) {
+        console.log("Error", e)
         return e
       }
     }),

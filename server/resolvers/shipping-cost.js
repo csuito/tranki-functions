@@ -36,8 +36,8 @@ const getShippingCosts = combineResolvers(
     // Helpers
     const { numDaysBetween } = require('./helpers/dates-between')
     const today = new Date()
-    let in_stock = []
-    let check_stock = []
+    let in_stock = new Set()
+    let check_stock = new Set()
 
     // Queries
     const stockQuery = Stock.find({ asin: { $in: asins } })
@@ -59,23 +59,23 @@ const getShippingCosts = combineResolvers(
     for (asin of asins) {
       const stock = stocks.find(s => s.asin === asin)
       if (!stock) {
-        check_stock.push(asin)
+        check_stock.add(asin)
       }
       if (stock && !stock.in_stock) {
-        check_stock.push(asin)
+        check_stock.add(asin)
       }
     }
 
     // Checking stock estimations present in the DB
     for (let stock of stocks) {
       let diff = numDaysBetween(today, stock.lastChecked)
-      if (diff < 2) {
+      if (diff < 0) {
         if (stock && stock.in_stock) {
-          in_stock.push(stock.asin)
+          in_stock.add(stock.asin)
         }
       }
       else {
-        check_stock.push(stock.asin)
+        check_stock.add(stock.asin)
       }
     }
 
@@ -99,7 +99,7 @@ const getShippingCosts = combineResolvers(
 
     // Obtaining fresh stock_estimation
     if (stock) {
-      const stockEstimations = check_stock.map(s => {
+      const stockEstimations = Array.from(check_stock).map(s => {
         const params = {
           type: requestTypes.STOCK_ESTIMATION,
           asin: s
@@ -113,38 +113,40 @@ const getShippingCosts = combineResolvers(
         .filter(a => a.status === "fulfilled" && a.value.data.stock_estimation)
         .map(a => a.value.data.stock_estimation)
 
-      // Checking fresh estimations and saving or updating in the DB
-      let dbOps = []
-      for (estimation of allEstimations) {
-        if (estimation.in_stock) {
-          in_stock.push(estimation.asin)
-        }
-        const existingRegistry = stocks.find(s => s.asin === estimation.asin)
-        if (existingRegistry) {
-          dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: Date.now(), stock_failure: 0 }))
-        } else {
-          dbOps.push(Stock.create(estimation))
-        }
-      }
       /**
        * Checking for out of stock products
        */
-      products
-        .filter(p => !in_stock.includes(p.productID))
-        .forEach(p => {
-          const existingRegistry = stocks.find(s => s.asin === p.productID)
-          if (existingRegistry) {
+      let dbOps = []
+      for (estimation of allEstimations) {
+        const { quantity } = input.find(i => i.productID === estimation.asin)
+        const productIsInStock = estimation.in_stock && estimation.availability_message.toLowerCase().trim() === "disponible" && estimation.stock_level > quantity
+        if (productIsInStock) {
+          in_stock.add(estimation.asin)
+        }
+        const existingRegistry = stocks.find(s => s.asin === estimation.asin)
+        if (existingRegistry) {
+          if (productIsInStock) {
+            dbOps.push(Stock.updateOne({ asin: existingRegistry.asin }, { ...estimation, lastChecked: new Date() }))
+          } else {
             if (existingRegistry.stock_failure > 1) {
               dbOps.push(Stock.deleteOne({ _id: existingRegistry._id }))
               dbOps.push(Product.deleteOne({ _id: p._id }))
               dbOps.push(index.deleteObject(p.objectID))
             } else {
-              dbOps.push(Stock.update({ _id: existingRegistry._id }, { $inc: { stock_failure: 1 }, $set: { in_stock: false } }))
+              dbOps.push(Stock.updateOne({ _id: existingRegistry._id }, { $set: { lastChecked: new Date() }, $inc: { stock_failure: 1 } }))
             }
-          } else {
-            dbOps.push(Stock.create({ stock_level: 0, is_prime: false, in_stock: false, asin: p.productID, lastChecked: new Date(), stock_failure: 1 }))
           }
-        })
+        } else {
+          if (productIsInStock) {
+            dbOps.push(Stock.create({ ...estimation }))
+          } else {
+            dbOps.push(Stock.create({ ...estimation, in_stock: false, stock_failure: 1 }))
+          }
+        }
+      }
+
+      in_stock = Array.from(in_stock)
+      check_stock = Array.from(check_stock)
 
       if (dbOps.length > 0) {
         await Promise.all(dbOps)

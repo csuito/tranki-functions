@@ -108,7 +108,6 @@ module.exports = {
     const { skip } = require("graphql-resolvers")
     try {
       const { user_id, roles } = await app.auth().verifyIdToken(auth)
-      console.log({ userID, user_id, isOwner: userID === user_id, roles })
       if (user_id === userID || roles.includes("admin")) return skip
       else throw new Error("Unauthorized")
     } catch (e) {
