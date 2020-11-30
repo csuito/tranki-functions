@@ -2,7 +2,6 @@ const sendgrid = require('@sendgrid/mail')
 if (process.env.NODE_ENV === "local") {
   require("dotenv").config()
 }
-console.log(process.env.SENDGRID_API)
 sendgrid.setApiKey(process.env.SENDGRID_API)
 module.exports = {
   /**

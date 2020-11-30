@@ -186,7 +186,6 @@ module.exports = {
         user.expoTokens = user.expoTokens || []
         user.expoTokens.push({ token, installationID })
         await DBQuery(User.updateOne({ firebaseID }, user))
-        console.log("Done!")
         return true
       } catch (e) {
         console.log(e)

@@ -118,10 +118,15 @@ const getProduct = combineResolvers(
                     return { ...v, weight, ft3Vol, lb3Vol }
                   }
                 })
-              product.variants = product.variants.map(v => {
-                const fullVariant = allVariants.find(av => av.asin === v.asin)
-                return { ...fullVariant, title: v.title }
-              })
+              product.variants = product.variants
+                .map(v => {
+                  const fullVariant = allVariants.find(av => av.asin === v.asin)
+                  if (fullVariant) {
+                    return { ...fullVariant, title: v.title }
+                  }
+                  return false
+                })
+                .filter(v => v)
             }
             const inserts = buildInsertOps([product], [objectID])
             // Saving on DB
