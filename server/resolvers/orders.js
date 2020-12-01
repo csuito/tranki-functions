@@ -116,17 +116,19 @@ module.exports = {
       const Order = require('../model/orders')
       const User = require('../model/users')
       const dayjs = require('dayjs')
+      const { orderCancelled: slackOrderCancelled } = require('../../functions/bots/slack')
       const { orderID } = input
       let hourDiff, order
 
       // Looking for order and checking hour difference
       try {
-        const query = Order.findOne({ _id: orderID })
+        const query = Order.findOne({ locator: orderID })
         order = await DBQuery(query)
         const creationDate = dayjs(order.creationDate)
         const today = dayjs()
         hourDiff = today.diff(creationDate, "hour")
       } catch (e) {
+        console.log(e)
         return false
       }
 
@@ -134,7 +136,7 @@ module.exports = {
       if (hourDiff <= 2) {
         try {
           const { orderCancelled } = require('./services/sendgrid')
-          const query = Order.findOneAndUpdate({ _id: orderID }, { $set: { status: "cancelled" } })
+          const query = Order.findOneAndUpdate({ locator: orderID }, { $set: { status: "cancelled" } })
           await DBQuery(query)
           const stripe = require('stripe')(process.env.STRIPE_KEY)
           const { price, payment: { txID: charge, fee } } = order
@@ -143,13 +145,15 @@ module.exports = {
           const refund = await stripe.refunds.create({ charge, amount })
           if (refund.status === "succeeded") {
             // Let the user know through email
+            const user = await DBQuery(User.findOne({ firebaseID: order.userID }))
+            const { firstName, email } = user
+            const { locator } = order
+            await orderCancelled({ firstName, email, total: (amount / 100).toFixed(2), orderID: locator })
+            await slackOrderCancelled({ email, total: (amount / 100).toFixed(2), locator })
           }
-          const user = await DBQuery(User.findOne({ firebaseID: order.userID }))
-          const { firstName, email } = user
-          const { locator } = order
-          await orderCancelled({ firstName, email, total: price, orderID: locator })
           return true
         } catch (e) {
+          console.log(e)
           return false
         }
       }
