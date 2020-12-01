@@ -52,7 +52,7 @@ shipping.path("address").discriminator("Venezuela", venezuelanAddressSchema)
 const orderSchema = new Schema({
   cart: [product],
   userID: { type: String, required: true },
-  locator: { type: String },
+  locator: { type: String, index: true },
   email: { type: String, required: true },
   phoneNumber: { type: String, required: true },
   price: { type: Number, required: true },

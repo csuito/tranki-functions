@@ -25,10 +25,6 @@ module.exports = {
     }
   },
   orderRecieved: async ({ email, total, locator }) => {
-    let payload = {
-      type: "mrkdwn",
-      text: `Order received! From ${email} for a total of $${total}. Locator: ${locator}`
-    }
     try {
       const response = await axios.post('https://hooks.slack.com/services/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', {
         "blocks": [
@@ -61,6 +57,52 @@ module.exports = {
             "text": {
               "type": "mrkdwn",
               "text": `*Locator*\n:mag_right::mag_right::mag_right:\n ${locator}\n:mag_right::mag_right::mag_right:`
+            }
+          },
+          {
+            "type": "divider"
+          }
+        ]
+      })
+      return { success: true, data: response }
+    } catch (e) {
+      console.log(e)
+      throw new Error(e)
+    }
+  },
+  orderCancelled: async ({ email, total, locator }) => {
+    try {
+      const response = await axios.post('https://hooks.slack.com/services/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', {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Order cancelled!* :cry:"
+            }
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": `*Email* \n ${email}`
+            }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": `*Total*\n $${total}`
+            }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": `*Locator*\n${locator}`
             }
           },
           {
