@@ -3,6 +3,7 @@ module.exports = `
     air: Float!
     sea: Float!
     in_stock: [String!]!
+    price_changes: [PriceChange!]
     price_changed: Boolean!
     airCost: Float!
     seaCost: Float!
@@ -14,5 +15,10 @@ module.exports = `
     totalProductsPrice: Float!
     totalAirFee: Float!
     totalSeaFee: Float!
+  }
+
+  type PriceChange {
+    productID: String!
+    newPrice: Float!
   }
 `

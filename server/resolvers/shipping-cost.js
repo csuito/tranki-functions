@@ -3,7 +3,7 @@ const { isAuthenticated } = require('./middleware/auth')
 const { flatFeeDepartments, requestTypes } = require('../constants')
 const { client } = require('../../client')
 const AllSettled = require('promise.allsettled')
-const { getSpec, getCourierCosts } = require('../../functions/helpers/hookHelpers')
+const { getCourierCosts } = require('../../functions/helpers/hookHelpers')
 const { connectDB, closeDB } = require("../../functions/config/db")
 const algoliaClient = require("../../functions/config/algolia")()
 const index = algoliaClient.initIndex("products")
@@ -38,6 +38,7 @@ const getShippingCosts = combineResolvers(
     const today = new Date()
     let in_stock = new Set()
     let check_stock = new Set()
+    let price_changes = []
 
     // Queries
     const stockQuery = Stock.find({ asin: { $in: asins } })
@@ -45,12 +46,10 @@ const getShippingCosts = combineResolvers(
       {
         $or:
           [
-            { productID: { $in: asins } },
-            { variants: { $elemMatch: { asin: { $in: asins } } } }
+            { variants: { $elemMatch: { asin: { $in: asins } } } },
+            { productID: { $in: asins } }
           ]
       })
-
-    let price_changed = false
 
     // Fetching products and stock estimations in database
     let [products, stocks] = await Promise.all([productsQuery, stockQuery])
@@ -68,15 +67,16 @@ const getShippingCosts = combineResolvers(
 
     // Checking stock estimations present in the DB
     for (let stock of stocks) {
-      let diff = numDaysBetween(today, stock.lastChecked)
-      if (diff < 0) {
-        if (stock && stock.in_stock) {
-          in_stock.add(stock.asin)
-        }
-      }
-      else {
-        check_stock.add(stock.asin)
-      }
+      check_stock.add(stock.asin)
+      // let diff = numDaysBetween(today, stock.lastChecked)
+      // if (diff < 0) {
+      //   if (stock && stock.in_stock) {
+      //     in_stock.add(stock.asin)
+      //   }
+      // }
+      // else {
+      //   check_stock.add(stock.asin)
+      // }
     }
 
     // Fetching products or variants requested by the user
@@ -88,14 +88,30 @@ const getShippingCosts = combineResolvers(
         if (p.variants && p.variants.length > 0) {
           const variant = p.variants.find(v => asins.includes(v.asin))
           if (variant) {
-            const { weightSpec, dimensionSpec } = getSpec(variant)
-            if (dimensionSpec && weightSpec) {
+            const { weight, ft3Vol, lb3Vol } = variant
+            if (weight && ft3Vol && lb3Vol) {
               return variant
+            } else {
+              const { weight, ft3Vol, lb3Vol } = p
+              return { ...variant, weight: weight, ft3Vol: ft3Vol, lb3Vol: lb3Vol }
             }
-            return p
           }
         }
       })
+
+    // If these 2 lenghts do not match, it means we have parent and variants of the same document
+    if (products.length !== asins.length) {
+      for (let a of asins) {
+        const parentProduct = products.find(p => p.productID === a)
+        if (!parentProduct) {
+          const _parentProduct = products.find(p => p.variants && p.variants.find(v => v.asin === a))
+          if (_parentProduct) {
+            const variant = _parentProduct.variants.find(v => v.asin === a)
+            products.push(variant)
+          }
+        }
+      }
+    }
 
     // Obtaining fresh stock_estimation
     if (stock) {
@@ -118,11 +134,33 @@ const getShippingCosts = combineResolvers(
        */
       let dbOps = []
       for (estimation of allEstimations) {
+
         const { quantity } = input.find(i => i.productID === estimation.asin)
-        const productIsInStock = estimation.in_stock && estimation.availability_message.toLowerCase().trim() === "disponible" && estimation.stock_level > quantity
+        const product = products.find(p => p.productID === estimation.asin || p.asin === estimation.asin)
+        const productIsInStock = product && estimation.in_stock && estimation.availability_message.toLowerCase().trim() === "disponible" && estimation.stock_level > quantity
+
         if (productIsInStock) {
+          let currProductPrice
+          const { buybox_winner = {} } = product
+          const { price = false, rrp = false } = buybox_winner
+
+          // Checking for price updates
+          if (rrp) { currProductPrice = rrp }
+          if (price) { currProductPrice = price }
+
+          if (currProductPrice.value !== estimation.price.value) {
+            price_changes.push({ productID: product.productID || product.asin, newPrice: estimation.price.value })
+            if (product.productID) {
+              dbOps.push(Product.updateOne({ _id: product._id }, { $set: { 'buybox_winner.price': estimation.price } }))
+              dbOps.push(index.partialUpdateObject({ buybox_winner: { ...buybox_winner, price: estimation.price }, objectID: product.objectID }))
+            } else {
+              dbOps.push(Product.updateOne({ "variants.asin": product.asin }, { $set: { 'variants.$.buybox_winner.price': estimation.price } }))
+            }
+          }
           in_stock.add(estimation.asin)
         }
+
+        // Updating or deleting stock and products
         const existingRegistry = stocks.find(s => s.asin === estimation.asin)
         if (existingRegistry) {
           if (productIsInStock) {
@@ -130,8 +168,8 @@ const getShippingCosts = combineResolvers(
           } else {
             if (existingRegistry.stock_failure > 1) {
               dbOps.push(Stock.deleteOne({ _id: existingRegistry._id }))
-              dbOps.push(Product.deleteOne({ _id: p._id }))
-              dbOps.push(index.deleteObject(p.objectID))
+              dbOps.push(Product.deleteOne({ _id: product._id }))
+              dbOps.push(index.deleteObject(product.objectID))
             } else {
               dbOps.push(Stock.updateOne({ _id: existingRegistry._id }, { $set: { lastChecked: new Date() }, $inc: { stock_failure: 1 } }))
             }
@@ -153,7 +191,6 @@ const getShippingCosts = combineResolvers(
       }
     }
 
-
     // Calculating shipping and processing costs for all dynamic and static products that are in stock
     if (stock) products = products.filter(p => in_stock.includes(p.productID))
     const flatFeeProducts = products.filter(p => flatFeeDepartments.includes(p.department))
@@ -165,10 +202,14 @@ const getShippingCosts = combineResolvers(
       minWeight = 1, totalProductsPrice = 0
 
     for (let i = 0; i < dynamicFeeProducts.length; i++) {
+
       const p = dynamicFeeProducts[i]
-      const { lb3Vol, ft3Vol, weight, buybox_winner, price } = p
+      let { lb3Vol, ft3Vol, weight, buybox_winner, price } = p
       const { quantity: qty } = input.find(i => i.productID === p.productID)
       let productPrice = buybox_winner && buybox_winner.price ? buybox_winner.price.value : price.value
+      const productPriceChanged = price_changes.find(pc => pc.productID === p.productID)
+      if (productPriceChanged) productPrice = productPriceChanged.newPrice
+
       totalProductsPrice += productPrice
       const productFt3Vol = ft3Vol * qty
       const productWeight = weight * qty
@@ -201,8 +242,8 @@ const getShippingCosts = combineResolvers(
     const finalAirPrice = airCost / markup
     const finalSeaPrice = seaCost / markup
     // Stripe price
-    const airStripeFee = ((((finalAirPrice + totalProductsPrice) * 2.9) / 100) + 0.3)
-    const seaStripeFee = ((((finalSeaPrice + totalProductsPrice) * 2.9) / 100) + 0.3)
+    const airStripeFee = ((((finalAirPrice + totalProductsPrice) * 3.9) / 100) + 1) + (totalProductsPrice * 0.07)
+    const seaStripeFee = ((((finalSeaPrice + totalProductsPrice) * 3.9) / 100) + 1) + (totalProductsPrice * 0.07)
     // Handle fee
     const totalSeaFee = seaStripeFee + 1
     const totalAirFee = airStripeFee + 1
@@ -212,8 +253,8 @@ const getShippingCosts = combineResolvers(
     return {
       air: finalAirPrice < 15 ? 15 : finalAirPrice,
       sea: finalSeaPrice < 10 ? 10 : finalSeaPrice,
+      price_changes,
       in_stock,
-      price_changed,
       seaCost,
       airCost,
       totalProductsPrice,
@@ -225,7 +266,6 @@ const getShippingCosts = combineResolvers(
       totalAirFee,
       totalSeaFee
     }
-
   })
 
 module.exports = getShippingCosts
