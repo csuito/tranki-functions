@@ -17,7 +17,7 @@ const queries = `
     product(productID: ID! variantID: String): Product
     users: [User]
     userExists(firebaseID: String!): Boolean!
-    orders(status: String courier: String, month: String, year: String): [Order]
+    orders(status: String courier: String month: String year: String): [Order]
     activeUsers: [User]
     userOrders(userID: ID!): [Order]
     order(_id: ID!): Order

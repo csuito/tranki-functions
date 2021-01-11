@@ -1,7 +1,7 @@
 (async () => {
   require('dotenv').config()
   const algoliaClient = require("../config/algolia")()
-  const { connectDB, closeDB } = require('../../functions/config/db')
+  const { connectDB, closeDB } = require('../config/db')
   const Product = require('../../server/model/products')
   let extraAlgoliaProducts = []
   try {

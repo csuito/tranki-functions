@@ -79,7 +79,10 @@ const shortProduct = new Schema({
 
 const productSchema = new Schema({
   title: { type: String, required: true },
+  creationDate: { type: Date, default: Date.now },
+  lastUpdate: { type: Date, default: Date.now },
   productID: { type: String, required: true, unique: true, index: true },
+  hash: { type: String, required: true, unique: true, index: true },
   store: { type: String, required: true },
   link: { type: String, required: true },
   is_prime: { type: Boolean },
