@@ -19,6 +19,7 @@ const StockSweep = async () => {
     const numBatches = Math.ceil(backup.length / 10)
     const batches = splitUp(backup, numBatches)
     let allAlgoliaIDs = []
+    let allProductIDs = []
     for (let batch of batches) {
         await waitFor(2000)
         const promises = batch.map(b => client.get('/request', {
@@ -36,7 +37,9 @@ const StockSweep = async () => {
         const productIDs = shouldDelete.map(product => product.productID)
         const objIDs = shouldDelete.map(product => product.objectID)
         allAlgoliaIDs = [...allAlgoliaIDs, ...objIDs]
+        allProductIDs = [...allProductIDs, ...productIDs]
         fs.writeFile('./functions/backups/algolia-backup.json', JSON.stringify(allAlgoliaIDs), (err) => { if (err) console.error(err) })
+        fs.writeFile('./functions/backups/products-id-backup.json', JSON.stringify(allProductIDs), (err) => { if (err) console.error(err) })
         console.log("Removing", { db: productIDs, algolia: objIDs })
         // if (productIDs && productIDs.length && objIDs && objIDs.length) {
         //     await Products.deleteMany({ productID: { $in: productIDs } })
