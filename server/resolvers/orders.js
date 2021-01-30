@@ -11,7 +11,7 @@ module.exports = {
       let query = {}
       if (status) query.status = status
       if (courier) {
-        query.shipping = { courier }
+        query = { ...query, 'shipping.courier': courier }
       }
       if (month && year) {
         const from = dayjs().set('month', month).set('year', year).startOf('month').toDate()

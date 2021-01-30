@@ -7,3 +7,4 @@ firebase-config.json
 .env.*
 .DS_Store
 s-account.json
+functions/backups/*.json

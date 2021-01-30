@@ -24,6 +24,13 @@ module.exports = {
       throw new Error(e)
     }
   },
+  /**
+   * 
+   * @param {Object} payload
+   * @param {String} payload.email
+   * @param {Number} payload.total
+   * @param {String} payload.locator
+   */
   orderRecieved: async ({ email, total, locator }) => {
     try {
       const response = await axios.post('https://hooks.slack.com/services/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', {
@@ -66,7 +73,6 @@ module.exports = {
       })
       return { success: true, data: response }
     } catch (e) {
-      console.log(e)
       throw new Error(e)
     }
   },
